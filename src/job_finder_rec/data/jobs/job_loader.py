@@ -42,11 +42,8 @@ def load_all_job_data(data_folder: str) -> List[Dict]:
                         company_from_filename = (
                             extract_company_from_filename(filename)
                         )
-                        if company_from_filename:
-                            data["company_name_from_file"] = (
-                                company_from_filename
-                            )
-                            print(f"파일명에서 추출한 회사명: {company_from_filename}")
+                        data["company_name"] = company_from_filename
+                        print(f"파일명에서 추출한 회사명: {company_from_filename}")
                     job_data.append(data)
             except Exception as e:
                 print(f"파일 로드 실패 {filename}: {e}")
