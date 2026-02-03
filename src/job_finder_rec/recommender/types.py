@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 
@@ -15,37 +16,49 @@ class UserPreferences:
 
 @dataclass(frozen=True)
 class JobPosting:
-    # 전처리된 고정 스키마를 "속성"으로 접근하기 위한 타입
-    job_id: str
-    title: str
+    '''
+    전처리된 고정 스키마를 속성으로 접근하기 위함
+    '''
+    group_name: str
     company_name: str
-
+    job_title: str
+    position_name: str
     processed_position_name: str
+
     min_experience_level: str
+    max_experience_level: str
     employment_type: str
+
     min_education_level: str
+    max_education_level: str
 
-    url: Optional[str] = None
+    application_start_date: Optional[str]
+    application_deadline_date: Optional[str]
+    application_deadline_time: Optional[str]
+
+    team_introduction: Optional[str]
+    job_duties: Optional[str]
+    qualifications: Optional[str]
+    preferred_qualifications: Optional[str]
+
+    work_location: Optional[str]
+    work_department: Optional[str]
+    recruitment_process: Optional[str]
+    other_details: Optional[str]
+
+    application_link: Optional[str]
+    image_filename: Optional[str]
+    crawling_datetime: Optional[str]
+
+    # 파생 필드: 마감기한 datetime
+    deadline: Optional[datetime] = None
+
+    # 디버깅/추적용 원본
     raw: Optional[Dict[str, Any]] = None
-
-    @staticmethod
-    def from_dict(d: Dict[str, Any], fallback_id: str) -> "JobPosting":
-        # 전처리로 키가 항상 동일하니, 여기서만 딱 한 번 매핑해주면 됨
-        return JobPosting(
-            job_id=str(d.get("job_id") or fallback_id),
-            title=str(d.get("title") or "").strip(),
-            company_name=str(d.get("company_name") or "").strip(),
-            processed_position_name=str(d.get("processed_position_name") or "").strip(),
-            min_experience_level=str(d.get("min_experience_level") or "").strip(),
-            employment_type=str(d.get("employment_type") or "").strip(),
-            min_education_level=str(d.get("min_education_level") or "").strip(),
-            url=(str(d.get("url")).strip() if d.get("url") else None),
-            raw=d,
-        )
 
 
 @dataclass(frozen=True)
 class RecommendationItem:
     job: JobPosting
     is_preferred_company: bool
-    score: int
+    score: float = 0.0
