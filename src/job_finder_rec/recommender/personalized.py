@@ -1,7 +1,6 @@
 from typing import List
 
-from job_finder_rec.recommender.engine import RecommendRequest, PersonalizedMethod
-from job_finder_rec.recommender.types import JobPosting, RecommendationItem, UserPreferences
+from job_finder_rec.recommender.types import RecommendRequest, PersonalizedMethod, JobPosting, RecommendationItem, UserPreferences
 
 
 def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> List[JobPosting]:
@@ -36,13 +35,13 @@ def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> List[JobPos
     return filtered
 
 
-def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: RecommendRequest) -> List[RecommendationItem]:
+def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "RecommendRequest") -> List[RecommendationItem]:
     """
     맞춤형 추천
     - method에 따라 분기
     - 정렬/점수화는 추후 이슈에서 구현
     """
-    if req.method == PersonalizedMethod.EMBEDDING:
+    if req.method == "embedding":
         # TODO: 임베딩 기반 유사 추천 구현
         # 지금은 filter fallback
         selected = _simple_filter(user, jobs)

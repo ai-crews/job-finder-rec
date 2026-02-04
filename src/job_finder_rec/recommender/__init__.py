@@ -1,4 +1,5 @@
-from .engine import RecommendRequest, FeedType, SortOption, PersonalizedMethod, recommend
+from .types import RecommendRequest, FeedType, SortOption, PersonalizedMethod
+from .engine import recommend
 
 __all__ = [
     "RecommendRequest",
