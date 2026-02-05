@@ -9,6 +9,7 @@ Q_JOB_3 = "희망 직무 3순위 "
 Q_EMPLOYMENT = "희망 고용 형태 (복수선택)"
 Q_CAREER = "찾고 계신 공고의 경력 조건을 선택해주세요."
 Q_EDUCATION = "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)"
+Q_SORT = "희망 정렬 기준"
 
 
 def _split_csv(s: str) -> List[str]:
@@ -45,6 +46,7 @@ def normalize_user(record: Dict[str, Any]) -> UserPreferences:
         target_education_levels=_split_csv((record.get(Q_EDUCATION) or "").strip()),
         career_pref=_split_csv((record.get(Q_CAREER) or "").strip()),
         target_companies=extract_target_companies(record),
+        sort=(record.get("희망 정렬 기준") or "").strip(),
         raw=record,
     )
     return prefs
