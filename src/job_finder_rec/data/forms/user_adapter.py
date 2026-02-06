@@ -46,7 +46,7 @@ def normalize_user(record: Dict[str, Any]) -> UserPreferences:
         target_education_levels=_split_csv((record.get(Q_EDUCATION) or "").strip()),
         career_pref=_split_csv((record.get(Q_CAREER) or "").strip()),
         target_companies=extract_target_companies(record),
-        sort=(record.get("희망 정렬 기준") or "").strip(),
+        sort=(record.get(Q_SORT) or "recommend").strip(),
         raw=record,
     )
     return prefs
