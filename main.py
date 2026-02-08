@@ -58,13 +58,13 @@ def main() -> None:
     top_n = 10
 
     # ===== 4) 유저별 요청 생성 및 실행 =====
-    for u in users:
+    for i, u in enumerate(users):
         req = build_requests_for_user(u, feed_type, method, top_n)
 
         recs = recommend(u, jobs, req)
 
         print("\n==============================")
-        print(f"👤 USER: {u.email} | feed={req.feed_type.value} | method={req.method.value} | sort={req.sort.value} | top_n={req.top_n}")
+        print(f"👤USER {i+1} : {u.email} | feed={req.feed_type.value} | method={req.method.value} | sort={req.sort.value} | top_n={req.top_n}")
         print(f"추천 결과: {len(recs)}개")
 
         for i, item in enumerate(recs[: req.top_n], 1):

@@ -11,10 +11,6 @@ def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> List[JobPos
     """
     filtered = jobs
 
-    # 경력 필터 : "신입", "확인불가", "" 만 통과
-    if any("신입" in x for x in user.career_pref):
-        filtered = [j for j in filtered if j.min_experience_level in ("신입", "확인불가", "")]
-
     # 고용형태 필터 : 비어있거나 "확인불가" 이거나 사용자가 원하는 것만
     if user.target_employment_types:
         filtered = [
@@ -48,10 +44,7 @@ def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "
     else:
         selected = _simple_filter(user, jobs)
 
-    target_companies = set(user.target_companies)
-
     items: List[RecommendationItem] = []
     for j in selected[: req.top_n]:
-        is_pref = (j.company_name in target_companies) if target_companies else False
-        items.append(RecommendationItem(job=j, is_preferred_company=is_pref, score=0.0))
+        items.append(RecommendationItem(job=j, is_preferred_company=False, score=0.0))
     return items
