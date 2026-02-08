@@ -119,6 +119,48 @@ def dummy_user_records() -> List[Dict[str, Any]]:
     유저 데이터가 없을 때도 파이프라인이 돌아가도록 더미 records 생성
     - user_adapter.normalize_user가 읽는 키들만 최소한으로 맞춰줌
     """
+    # 우선 환경변수로 폴더를 지정할 수 있게 하고, 기본은 data/prod/users
+    users_folder = os.getenv("USERS_DATA_FOLDER", os.path.join(os.getcwd(), "data", "prod", "users"))
+
+    def _load_from_file(path: str) -> Optional[List[Dict[str, Any]]]:
+        try:
+            if path.lower().endswith(('.xls', '.xlsx')):
+                try:
+                    import pandas as pd
+
+                    try:
+                        df = pd.read_excel(path, dtype=str)
+                    except Exception:
+                        # explicit fallback to openpyxl engine if default engine fails
+                        try:
+                            df = pd.read_excel(path, dtype=str, engine="openpyxl")
+                        except Exception as e:
+                            print(f"⚠️ pandas.read_excel 실패: {e}")
+                            return None
+
+                    df = df.fillna("")
+                    return df.to_dict(orient="records")
+                except Exception as e:
+                    print(f"⚠️ pandas import 또는 엑셀 파싱 실패: {e}")
+                    return None
+
+        except Exception:
+            return None
+
+    # 찾기: users_folder 내부의 첫 번째 적합한 파일을 사용
+    try:
+        if os.path.isdir(users_folder):
+            for fname in os.listdir(users_folder):
+                fpath = os.path.join(users_folder, fname)
+                if os.path.isfile(fpath) and fname.lower().endswith((".json", ".csv", ".xls", ".xlsx")):
+                    records = _load_from_file(fpath)
+                    if records:
+                        print(f"✅ 유저 샘플 로드: {fpath} -> {len(records)} records")
+                        return records
+    except Exception:
+        pass
+
+    # fallback: 기존 더미
     return [
         {
             "이메일 주소": "demo1@example.com",
