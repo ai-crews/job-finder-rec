@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 from job_finder_rec.recommender.types import UserPreferences
 import re
 
-EMAIL_KEYS = "이메일 주소"
+EMAIL_KEYS = "이메일"
 
 Q_NAME = "성함을 입력해주세요."
 Q_GENDER = "성별을 선택해주세요."
