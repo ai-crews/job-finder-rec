@@ -25,36 +25,41 @@ class JobPosting:
     '''
     전처리된 고정 스키마를 속성으로 접근하기 위함
     '''
-    group_name: str
+    # group_name: str
     company_name: str
     job_title: str
-    position_name: str
+    # position_name: str
     processed_position_name: str
 
-    min_experience_level: str
-    max_experience_level: str
+    # min_experience_level: str
+    # max_experience_level: str
+    processed_experience_level: str
     employment_type: str
 
-    min_education_level: str
-    max_education_level: str
+    # min_education_level: str
+    # max_education_level: str
+    processed_education_level_list: str
 
-    application_start_date: Optional[str]
-    application_deadline_date: Optional[str]
-    application_deadline_time: Optional[str]
+    industry: Optional[str] = None
+    company_size: Optional[str] = None
 
-    team_introduction: Optional[str]
-    job_duties: Optional[str]
-    qualifications: Optional[str]
-    preferred_qualifications: Optional[str]
+    application_start_date: Optional[str] = None
+    application_deadline_date: Optional[str] = None
+    application_deadline_time: Optional[str] = None
 
-    work_location: Optional[str]
-    work_department: Optional[str]
-    recruitment_process: Optional[str]
-    other_details: Optional[str]
+    # team_introduction: Optional[str]
+    # job_duties: Optional[str]
+    # qualifications: Optional[str]
+    # preferred_qualifications: Optional[str]
 
-    application_link: Optional[str]
-    image_filename: Optional[str]
-    crawling_datetime: Optional[str]
+    # work_location: Optional[str]
+    # work_department: Optional[str]
+    # recruitment_process: Optional[str]
+    # other_details: Optional[str]
+
+    # application_link: Optional[str]
+    # image_filename: Optional[str]
+    # crawling_datetime: Optional[str]
 
     # 파생 필드: 마감기한 datetime
     deadline: Optional[datetime] = None
@@ -63,43 +68,50 @@ class JobPosting:
     raw: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def from_dict(cls, src: Dict[str, Any], fallback_id: Optional[str] = None) -> "JobPosting":
+    def from_dict(cls, src: Dict[str, Any]) -> "JobPosting":
         """Create a JobPosting from a raw dict.
 
-        - Uses `fallback_id` when `group_name` is missing/empty.
         - Parses `application_deadline_date` and optional `application_deadline_time` into `deadline`.
         - Returns an instance with `raw` set to the original dict.
         """
-        group_name = src.get("group_name") or fallback_id or ""
         company_name = src.get("company_name") or ""
         job_title = src.get("job_title") or ""
-        position_name = src.get("position_name") or ""
         processed_position_name = src.get("processed_position_name") or ""
 
-        min_experience_level = src.get("min_experience_level") or ""
-        max_experience_level = src.get("max_experience_level") or ""
+        # group_name = src.get("group_name") or ""
+        # position_name = src.get("position_name") or ""
+
+        processed_experience_level = src.get("processed_experience_level") or ""
         employment_type = src.get("employment_type") or ""
 
-        min_education_level = src.get("min_education_level") or ""
-        max_education_level = src.get("max_education_level") or ""
+        # min_experience_level = src.get("min_experience_level") or ""
+        # max_experience_level = src.get("max_experience_level") or ""
+
+        processed_education_level_list = src.get("processed_education_level_list") or ""
+
+        # min_education_level = src.get("min_education_level") or ""
+        # max_education_level = src.get("max_education_level") or ""
+
+        industry = src.get("industry")
+        company_size = src.get("company_size")
 
         application_start_date = src.get("application_start_date")
         application_deadline_date = src.get("application_deadline_date")
         application_deadline_time = src.get("application_deadline_time")
 
-        team_introduction = src.get("team_introduction")
-        job_duties = src.get("job_duties")
-        qualifications = src.get("qualifications")
-        preferred_qualifications = src.get("preferred_qualifications")
+        # team_introduction = src.get("team_introduction")
+        # job_duties = src.get("job_duties")
+        # qualifications = src.get("qualifications")
+        # preferred_qualifications = src.get("preferred_qualifications")
 
-        work_location = src.get("work_location")
-        work_department = src.get("work_department")
-        recruitment_process = src.get("recruitment_process")
-        other_details = src.get("other_details")
+        # work_location = src.get("work_location")
+        # work_department = src.get("work_department")
+        # recruitment_process = src.get("recruitment_process")
+        # other_details = src.get("other_details")
 
-        application_link = src.get("application_link")
-        image_filename = src.get("image_filename")
-        crawling_datetime = src.get("crawling_datetime")
+        # application_link = src.get("application_link")
+        # image_filename = src.get("image_filename")
+        # crawling_datetime = src.get("crawling_datetime")
 
         # parse deadline into datetime when possible
         deadline: Optional[datetime] = None
@@ -121,30 +133,17 @@ class JobPosting:
                 deadline = None
 
         return cls(
-            group_name=group_name,
             company_name=company_name,
             job_title=job_title,
-            position_name=position_name,
             processed_position_name=processed_position_name,
-            min_experience_level=min_experience_level,
-            max_experience_level=max_experience_level,
+            processed_experience_level=processed_experience_level,
             employment_type=employment_type,
-            min_education_level=min_education_level,
-            max_education_level=max_education_level,
+            processed_education_level_list=processed_education_level_list,
+            industry=industry,
+            company_size=company_size,
             application_start_date=application_start_date,
             application_deadline_date=application_deadline_date,
             application_deadline_time=application_deadline_time,
-            team_introduction=team_introduction,
-            job_duties=job_duties,
-            qualifications=qualifications,
-            preferred_qualifications=preferred_qualifications,
-            work_location=work_location,
-            work_department=work_department,
-            recruitment_process=recruitment_process,
-            other_details=other_details,
-            application_link=application_link,
-            image_filename=image_filename,
-            crawling_datetime=crawling_datetime,
             deadline=deadline,
             raw=src,
         )

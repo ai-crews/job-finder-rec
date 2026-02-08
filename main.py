@@ -70,8 +70,8 @@ def main() -> None:
         for i, item in enumerate(recs[: req.top_n], 1):
             j = item.job
             print(f"{i:02d}. [{j.company_name}] {j.job_title} | {j.processed_position_name}")
-            if j.application_link:
-                print(f"    - link: {j.application_link}")
+            # if j.application_link:
+            #     print(f"    - link: {j.application_link}")
             if j.application_deadline_date:
                 # deadline(datetime)은 types에 있지만, 출력은 원본 키로도 충분
                 t = j.application_deadline_time or ""
