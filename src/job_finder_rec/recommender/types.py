@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -9,11 +9,15 @@ class UserPreferences:
     email: str
     target_jobs: List[str]                 # ["데이터 분석", "ML 엔지니어", ...]
     target_employment_types: List[str]     # ["정규직", "인턴", ...]
-    target_education_levels: List[str]     # ["학사", "석사", ...]
-    career_pref: List[str]                 # ["신입"] or ["경력"] 등 (폼 값 그대로)
-    target_companies: List[str]            # ["KB손해보험", "네이버", ...]
     sort: str                              # "deadline", "recommend" (폼 값 그대로)
     raw: Dict[str, Any]                    # 원본 record 보관(디버깅/추적용)
+    # optional demographic / profile fields from the form
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    birth_year: Optional[int] = None
+    current_education: Optional[str] = None
+    preferred_company_sizes: List[str] = field(default_factory=list)
+    interested_industries: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
