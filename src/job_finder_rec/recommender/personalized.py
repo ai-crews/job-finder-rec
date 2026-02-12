@@ -1,51 +1,66 @@
 from typing import List, Optional
-from datetime import datetime, date
 
-from job_finder_rec.recommender.types import RecommendRequest, PersonalizedMethod, JobPosting, RecommendationItem, UserPreferences
+from job_finder_rec.recommender.types import (
+    RecommendRequest, PersonalizedMethod, JobPosting, RecommendationItem, 
+    UserPreferences, FilterResult, FilterReason, RejectedJob
+)
+from job_finder_rec.recommender.utils import global_deadline_filter
 
 
-def _global_deadline_filter(jobs: List[JobPosting], today: Optional[date] = None) -> List[JobPosting]:
+
+
+
+def _employment_type_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
     """
-    [전역 하드필터] 마감일 필터
+    [맞춤형 필터] 고용형태 필터
     
-    - 발송일(today) 기준으로 application_deadline_date가 하루 이상 남은 공고만 포함
-    - 시간은 판단에 사용하지 않음 (날짜만 비교)
-    - 마감일이 없는 공고는 필터 적용 안함 (통과시킴)
-    
-    Args:
-        jobs: 필터링할 공고 목록
-        today: 기준 날짜 (None이면 오늘 사용)
-    
-    Returns:
-        필터링된 공고 목록
+    - 사용자가 고용형태를 선택하지 않으면 필터링 안함
+    - 공고의 고용형태가 비어있거나 "확인불가"이면 통과
+    - 공고의 고용형태가 사용자 선택목록에 있으면 통과
     """
-    if today is None:
-        today = date.today()
+    if not user.target_employment_types:
+        return result
     
-    filtered = []
-    for j in jobs:
-        # 1) 마감일이 없으면 필터 적용 안함 (결과에 포함)
-        if not j.application_deadline_date:
-            filtered.append(j)
-            continue
-        
-        try:
-            # 2) 마감일을 date 객체로 파싱 (시간 정보 무시)
-            deadline_date = datetime.strptime(j.application_deadline_date, "%Y-%m-%d").date()
-            
-            # 3) 마감일 > 오늘 인 경우만 포함 (하루 이상 남음)
-            if deadline_date > today:
-                filtered.append(j)
-        except (ValueError, TypeError):
-            # 4) 파싱 실패시 필터 적용 안함 (결과에 포함, 안전성)
-            filtered.append(j)
+    new_passed = []
+    new_rejected = list(result.rejected)
     
-    return filtered
+    for j in result.passed:
+        if j.employment_type in ("", "확인불가") or j.employment_type in user.target_employment_types:
+            new_passed.append(j)
+        else:
+            new_rejected.append(RejectedJob(job=j, reason=FilterReason.EMPLOYMENT))
+    
+    return FilterResult(passed=new_passed, rejected=new_rejected)
 
 
-def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> List[JobPosting]:
+def _job_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
     """
-    필터링: 전역 하드필터 + 맞춤형 필터
+    [맞춤형 필터] 직무 필터
+    
+    - processed_position_name에 사용자 직무 키워드가 포함되어야 함
+    """
+    if not user.target_jobs:
+        return result
+    
+    def norm(s: str) -> str:
+        return (s or "").replace(" ", "").lower()
+    
+    keywords = [norm(x) for x in user.target_jobs if x]
+    new_passed = []
+    new_rejected = list(result.rejected)
+    
+    for j in result.passed:
+        if any(k in norm(j.processed_position_name) for k in keywords):
+            new_passed.append(j)
+        else:
+            new_rejected.append(RejectedJob(job=j, reason=FilterReason.JOB))
+    
+    return FilterResult(passed=new_passed, rejected=new_rejected)
+
+
+def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
+    """
+    필터링: 전역 하드필터 + 맞춤형 필터 (Reason 기록 포함)
     
     **전역 하드필터(절대조건):**
     - 마감일: 하루 이상 남은 공고만
@@ -53,28 +68,20 @@ def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> List[JobPos
     **맞춤형 필터(개인화):**
     - 고용형태: 사용자 선택 유형만 (미선택/확인불가는 통과)
     - 직무: processed_position_name에 사용자 직무 키워드 포함
+    
+    Returns:
+        FilterResult: 필터 결과 (통과한 공고 + 탈락 공고들의 사유)
     """
     # 1) 전역 하드필터: 마감일
-    filtered = _global_deadline_filter(jobs)
-
+    result = global_deadline_filter(jobs)
+    
     # 2) 맞춤형 필터: 고용형태
-    if user.target_employment_types:
-        filtered = [
-            j for j in filtered
-            if (j.employment_type in ("", "확인불가") or j.employment_type in user.target_employment_types)
-        ]
-
+    result = _employment_type_filter(user, result)
+    
     # 3) 맞춤형 필터: 직무 키워드
-    if user.target_jobs:
-        def norm(s: str) -> str:
-            return (s or "").replace(" ", "").lower()
-        keywords = [norm(x) for x in user.target_jobs if x]
-        filtered = [
-            j for j in filtered
-            if any(k in norm(j.processed_position_name) for k in keywords)
-        ]
-
-    return filtered
+    result = _job_filter(user, result)
+    
+    return result
 
 
 def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "RecommendRequest") -> List[RecommendationItem]:
@@ -82,15 +89,22 @@ def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "
     맞춤형 추천
     - method에 따라 분기
     - 정렬/점수화는 추후 이슈에서 구현
+    - 필터링 결과와 탈락 사유를 추적
     """
     if req.method == "embedding":
         # TODO: 임베딩 기반 유사 추천 구현
         # 지금은 filter fallback
-        selected = _simple_filter(user, jobs)
+        filter_result = _simple_filter(user, jobs)
     else:
-        selected = _simple_filter(user, jobs)
+        filter_result = _simple_filter(user, jobs)
+
+    # 디버깅용: 필터링 결과 로깅 (선택)
+    if filter_result.rejected:
+        count_by_reason = filter_result.counts
+        # print(f"[필터링] 통과: {len(filter_result.passed)}, 탈락: {len(filter_result.rejected)}")
+        # print(f"[탈락 사유] {count_by_reason}")
 
     items: List[RecommendationItem] = []
-    for j in selected[: req.top_n]:
+    for j in filter_result.passed[: req.top_n]:
         items.append(RecommendationItem(job=j, is_preferred_company=False, score=0.0))
     return items
