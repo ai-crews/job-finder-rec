@@ -171,6 +171,41 @@ class PersonalizedMethod(str, Enum):
     EMBEDDING = "embedding"
 
 
+class FilterReason(str, Enum):
+    """필터링 탈락 사유 (하드필터)"""
+    DEADLINE = "deadline"              # 마감일 필터
+    JOB = "job"                        # 직무 필터
+    EMPLOYMENT = "employment"          # 고용형태 필터
+    COMPANY_SIZE = "company_size"      # 기업규모 필터
+    INDUSTRY = "industry"              # 산업 필터
+    EDUCATION = "education"            # 학력 필터
+
+
+@dataclass(frozen=True)
+class RejectedJob:
+    """필터링에서 탈락한 공고 기록"""
+    job: JobPosting
+    reason: FilterReason
+    
+
+@dataclass(frozen=True)
+class FilterResult:
+    """필터링 결과 추적
+    
+    - passed: 필터를 통과한 공고 목록
+    - rejected: 탈락한 공고 + 탈락 사유
+    - counts: 사유별 탈락 카운트 (디버깅/로깅용)
+    """
+    passed: List[JobPosting]
+    rejected: List[RejectedJob] = field(default_factory=list)
+    
+    @property
+    def counts(self) -> Dict[str, int]:
+        """사유별 탈락 카운트"""
+        from collections import Counter
+        return dict(Counter(r.reason.value for r in self.rejected))
+
+
 @dataclass(frozen=True)
 class RecommendRequest:
     feed_type: FeedType = FeedType.PERSONALIZED
