@@ -4,10 +4,10 @@ from job_finder_rec.recommender.types import (
     RecommendRequest, PersonalizedMethod, JobPosting, RecommendationItem, 
     UserPreferences, FilterResult, FilterReason, RejectedJob
 )
-from job_finder_rec.recommender.utils import global_deadline_filter
-
-
-
+from job_finder_rec.recommender.utils import (
+    global_deadline_filter, map_education_level, 
+    get_user_education_levels, get_job_education_levels
+)
 
 
 def _employment_type_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
