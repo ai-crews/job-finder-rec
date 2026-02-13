@@ -29,12 +29,14 @@ class JobPosting:
     company_name: str
     job_title: str
     # position_name: str
-    processed_position_name: str
+    processed_position_name: List[str]              # ["ML엔지니어", "AI개발자"]
 
     # min_experience_level: str
     # max_experience_level: str
     processed_experience_level: str
-    employment_type: str
+    processed_employment_type: List[str]            # ["정규직"]
+    
+    processed_language_required: str
 
     # min_education_level: str
     # max_education_level: str
@@ -42,7 +44,6 @@ class JobPosting:
 
     industry: Optional[str] = None
     company_size: Optional[str] = None
-
     application_start_date: Optional[str] = None
     application_deadline_date: Optional[str] = None
     application_deadline_time: Optional[str] = None
@@ -76,21 +77,22 @@ class JobPosting:
         """
         company_name = src.get("company_name") or ""
         job_title = src.get("job_title") or ""
-        processed_position_name = src.get("processed_position_name") or ""
 
-        # group_name = src.get("group_name") or ""
-        # position_name = src.get("position_name") or ""
+        processed_position_name = src.get("processed_position_name") or []
+        if isinstance(processed_position_name, str):
+            processed_position_name = [processed_position_name] if processed_position_name else []
 
         processed_experience_level = src.get("processed_experience_level") or ""
-        employment_type = src.get("employment_type") or ""
 
-        # min_experience_level = src.get("min_experience_level") or ""
-        # max_experience_level = src.get("max_experience_level") or ""
+        processed_employment_type = src.get("processed_employment_type") or []
+        if isinstance(processed_employment_type, str):
+            processed_employment_type = [processed_employment_type] if processed_employment_type else []
 
-        processed_education_level_list = src.get("processed_education_level_list") or ""
+        processed_language_required = src.get("processed_language_required") or ""
 
-        # min_education_level = src.get("min_education_level") or ""
-        # max_education_level = src.get("max_education_level") or ""
+        processed_education_level_list = src.get("processed_education_level_list") or []
+        if isinstance(processed_education_level_list, str):
+            processed_education_level_list = [processed_education_level_list] if processed_education_level_list else []
 
         industry = src.get("industry")
         company_size = src.get("company_size")
@@ -98,20 +100,6 @@ class JobPosting:
         application_start_date = src.get("application_start_date")
         application_deadline_date = src.get("application_deadline_date")
         application_deadline_time = src.get("application_deadline_time")
-
-        # team_introduction = src.get("team_introduction")
-        # job_duties = src.get("job_duties")
-        # qualifications = src.get("qualifications")
-        # preferred_qualifications = src.get("preferred_qualifications")
-
-        # work_location = src.get("work_location")
-        # work_department = src.get("work_department")
-        # recruitment_process = src.get("recruitment_process")
-        # other_details = src.get("other_details")
-
-        # application_link = src.get("application_link")
-        # image_filename = src.get("image_filename")
-        # crawling_datetime = src.get("crawling_datetime")
 
         # parse deadline into datetime when possible
         deadline: Optional[datetime] = None
@@ -137,7 +125,8 @@ class JobPosting:
             job_title=job_title,
             processed_position_name=processed_position_name,
             processed_experience_level=processed_experience_level,
-            employment_type=employment_type,
+            processed_employment_type=processed_employment_type,
+            processed_language_required=processed_language_required,
             processed_education_level_list=processed_education_level_list,
             industry=industry,
             company_size=company_size,
