@@ -15,7 +15,7 @@ class UserPreferences:
     name: Optional[str] = None
     gender: Optional[str] = None
     birth_year: Optional[int] = None
-    current_education: Optional[str] = None
+    current_education: List[str] = field(default_factory=list)  # ["학사 졸업(예정)", "석사 졸업(예정)", ...]
     preferred_company_sizes: List[str] = field(default_factory=list)
     interested_industries: List[str] = field(default_factory=list)
 
