@@ -38,7 +38,7 @@ class JobPosting:
 
     # min_education_level: str
     # max_education_level: str
-    processed_education_level_list: str
+    processed_education_level_list: List[str]
 
     industry: Optional[str] = None
     company_size: Optional[str] = None
