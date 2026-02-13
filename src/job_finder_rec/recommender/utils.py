@@ -6,42 +6,41 @@ from datetime import date as _date
 from job_finder_rec.recommender.types import FilterResult, RejectedJob, FilterReason
 
 
-def map_education_level(education_str: Optional[str]) -> int:
+def map_education_level(education_str: Optional[str]) -> str:
     """
-    학력 문자열을 레벨 숫자로 매핑
+    학력 문자열에서 키워드 추출
     
-    유저 학력 (input):
-    - "학사 졸업(예정)" → 2
-    - "석사 졸업(예정)" → 3
-    - "박사 졸업(예정)" → 4
-    
-    공고 학력 요구사항 (job):
-    - "학력무관" → 0
-    - "학사" → 2
-    - "석사" → 3
-    - "박사" → 4
+    예:
+    - "학사 졸업(예정)" → "학사"
+    - "석사 졸업(예정)" → "석사"
+    - "박사 졸업(예정)" → "박사"
+    - "학력무관" → "학력무관"
     
     Returns:
-        int: 레벨 (0~4), 매핑 불가시 -1
+        str: 추출된 학력 키워드 ("학사", "석사", "박사", "학력무관" 중 하나, 없으면 "")
     """
     if not education_str:
-        return -1
+        return ""
     
-    s = (education_str or "").strip()
+    s = education_str.strip()
     
-    # 공고 학력 요구 (우선 체크, "학력무관" 구분용)
+    # 박사 확인
+    if "박사" in s:
+        return "박사"
+    
+    # 석사 확인
+    if "석사" in s:
+        return "석사"
+    
+    # 학사 확인
+    if "학사" in s:
+        return "학사"
+    
+    # 학력무관 확인
     if "학력무관" in s:
-        return 0
+        return "학력무관"
     
-    # 유저 학력
-    if "박사 졸업(예정)" in s:
-        return 4
-    if "석사 졸업(예정)" in s:
-        return 3
-    if "학사 졸업(예정)" in s:
-        return 2
-    
-    return -1
+    return ""
 
 
 def global_deadline_filter(jobs: List[Any], today: Optional[_date] = None) -> FilterResult:
