@@ -58,6 +58,64 @@ def _job_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
     return FilterResult(passed=new_passed, rejected=new_rejected)
 
 
+def _education_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
+    """
+    [맞춤형 필터] 학력 필터 (정확 일치 기반)
+    
+    사용자가 선택한 학력은 "공고에서 원하는 학력 조건"이므로,
+    선택한 학력과 공고의 요구 학력이 정확히 일치하는지 확인.
+    
+    통과 조건:
+    1. 공고 학력 요구에 "학력무관"이 있으면 → 항상 통과
+    2. 공고 요구 학력 레벨과 사용자 선택 학력 레벨의 교집합이 있으면 → 통과
+    3. 그 외 → 탈락
+    
+    예시:
+    - 사용자: ["학사 졸업(예정)", "박사 졸업(예정)"] → {2, 4}
+    - 공고1: "학력무관" → [0] → 통과 (학력무관)
+    - 공고2: "학사" → [2] → 통과 (교집합 {2})
+    - 공고3: "석사" → [3] → 탈락 (교집합 {})
+    - 공고4: "학사, 박사" → [2, 4] → 통과 (교집합 {2, 4})
+    
+    Returns:
+        FilterResult: 필터 결과
+    """
+    # 사용자가 학력을 선택하지 않으면 필터링 안함
+    if not user.current_education or not isinstance(user.current_education, list):
+        return result
+    
+    user_levels = get_user_education_levels(user.current_education)
+    if not user_levels:
+        # 매핑 불가능한 값 → 필터링 안함
+        return result
+    
+    new_passed = []
+    new_rejected = list(result.rejected)
+    
+    for j in result.passed:
+        job_levels = get_job_education_levels(j.processed_education_level_list)
+        
+        # 공고 학력 요구가 없으면 (-1) 항상 통과
+        if job_levels == [-1] or not job_levels:
+            new_passed.append(j)
+            continue
+        
+        # "학력무관" (0)이 있으면 항상 통과
+        if 0 in job_levels:
+            new_passed.append(j)
+            continue
+        
+        # 공고의 학력 레벨과 사용자 선택 학력의 교집합이 있으면 통과
+        job_level_set = set(job_levels)
+        if job_level_set & user_levels:  # 교집합
+            new_passed.append(j)
+        else:
+            new_rejected.append(RejectedJob(job=j, reason=FilterReason.EDUCATION))
+    
+    return FilterResult(passed=new_passed, rejected=new_rejected)
+
+
+
 def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
     """
     필터링: 전역 하드필터 + 맞춤형 필터 (Reason 기록 포함)
