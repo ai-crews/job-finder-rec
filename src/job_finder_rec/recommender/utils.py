@@ -2,9 +2,46 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from datetime import date as _date
-from typing import Any
 
 from job_finder_rec.recommender.types import FilterResult, RejectedJob, FilterReason
+
+
+def map_education_level(education_str: Optional[str]) -> int:
+    """
+    학력 문자열을 레벨 숫자로 매핑
+    
+    유저 학력 (input):
+    - "학사 졸업(예정)" → 2
+    - "석사 졸업(예정)" → 3
+    - "박사 졸업(예정)" → 4
+    
+    공고 학력 요구사항 (job):
+    - "학력무관" → 0
+    - "학사" → 2
+    - "석사" → 3
+    - "박사" → 4
+    
+    Returns:
+        int: 레벨 (0~4), 매핑 불가시 -1
+    """
+    if not education_str:
+        return -1
+    
+    s = (education_str or "").strip()
+    
+    # 공고 학력 요구 (우선 체크, "학력무관" 구분용)
+    if "학력무관" in s:
+        return 0
+    
+    # 유저 학력
+    if "박사 졸업(예정)" in s:
+        return 4
+    if "석사 졸업(예정)" in s:
+        return 3
+    if "학사 졸업(예정)" in s:
+        return 2
+    
+    return -1
 
 
 def global_deadline_filter(jobs: List[Any], today: Optional[_date] = None) -> FilterResult:
@@ -107,6 +144,66 @@ def build_requests_for_user(user, feed_type, method, top_n):
 
     req = RecommendRequest(feed_type=feed_type, method=method, sort=sort, top_n=top_n)
     return req
+
+
+def get_user_education_levels(user_educations: List[str]) -> set:
+    """
+    사용자가 선택한 학력 리스트를 레벨 집합으로 변환
+    
+    사용자가 선택한 학력은 "공고에서 원하는 학력 조건"이므로,
+    선택한 모든 학력의 레벨을 집합으로 반환
+    
+    예: ["학사 졸업(예정)", "박사 졸업(예정)"] → {2, 4}
+    
+    Args:
+        user_educations: 사용자가 선택한 학력 리스트
+    
+    Returns:
+        set: 학력 레벨 집합 (예: {2, 4}), 매핑 불가시 빈 집합
+    """
+    if not user_educations:
+        return set()
+    
+    levels = set()
+    for edu in user_educations:
+        if not edu:
+            continue
+        level = map_education_level(edu)
+        if level > 0:  # 0 이상만 ("학력무관" 제외)
+            levels.add(level)
+    
+    return levels
+
+
+def get_job_education_levels(job_educations_str: Optional[str]) -> List[int]:
+    """
+    공고의 학력 요구사항(문자열)을 레벨 리스트로 변환
+    
+    공고는 복합 값을 가질 수 있음:
+    - "학력무관" → [0]
+    - "학사" → [2]
+    - "학사, 석사" → [2, 3]
+    - "학력무관, 학사" → [0, 2] (하나라도 "학력무관"이면 모두 통과)
+    
+    Args:
+        job_educations_str: 공고의 학력 요구사항 (쉼표로 구분 가능)
+    
+    Returns:
+        List[int]: 학력 레벨 리스트
+    """
+    if not job_educations_str:
+        return []
+    
+    # 쉼표로 구분된 값들을 각각 매핑
+    parts = [p.strip() for p in str(job_educations_str).split(',') if p.strip()]
+    levels = []
+    
+    for part in parts:
+        level = map_education_level(part)
+        if level >= 0:
+            levels.append(level)
+    
+    return levels if levels else [-1]
 
 
 def load_sheet_records() -> Optional[List[Dict[str, Any]]]:
