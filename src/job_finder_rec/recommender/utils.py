@@ -175,29 +175,33 @@ def get_user_education_levels(user_educations: List[str]) -> set:
     return levels
 
 
-def get_job_education_levels(job_educations_str: Optional[str]) -> List[int]:
+def get_job_education_levels(job_educations: Any) -> List[int]:
     """
-    공고의 학력 요구사항(문자열)을 레벨 리스트로 변환
+    공고의 학력 요구사항(리스트 또는 문자열)을 레벨 리스트로 변환
     
     공고는 복합 값을 가질 수 있음:
-    - "학력무관" → [0]
-    - "학사" → [2]
-    - "학사, 석사" → [2, 3]
-    - "학력무관, 학사" → [0, 2] (하나라도 "학력무관"이면 모두 통과)
+    - ["학력무관"] → [0]
+    - ["학사"] → [2]
+    - ["학사", "석사"] → [2, 3]
+    - ["학력무관", "학사"] → [0, 2] (하나라도 "학력무관"이면 0 포함)
     
     Args:
-        job_educations_str: 공고의 학력 요구사항 (쉼표로 구분 가능)
+        job_educations: 공고의 학력 요구사항 (리스트) 또는 쉼표로 구분된 문자열
     
     Returns:
         List[int]: 학력 레벨 리스트
     """
-    if not job_educations_str:
+    if not job_educations:
         return []
     
-    # 쉼표로 구분된 값들을 각각 매핑
-    parts = [p.strip() for p in str(job_educations_str).split(',') if p.strip()]
-    levels = []
+    # 리스트인 경우
+    if isinstance(job_educations, list):
+        parts = [p.strip() for p in job_educations if p]
+    # 문자열인 경우 (호환성)
+    else:
+        parts = [p.strip() for p in str(job_educations).split(',') if p.strip()]
     
+    levels = []
     for part in parts:
         level = map_education_level(part)
         if level >= 0:
