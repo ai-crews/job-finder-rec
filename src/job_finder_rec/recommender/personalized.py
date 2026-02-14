@@ -275,12 +275,10 @@ def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "
     - 정렬/점수화는 추후 이슈에서 구현
     - 필터링 결과와 탈락 사유를 추적
     """
-    if req.method == "embedding":
-        # TODO: 임베딩 기반 유사 추천 구현
-        # 지금은 filter fallback
-        filter_result = _simple_filter(user, jobs)
+    if req.method == "filter":
+        filter_result = apply_filter(user, jobs)
     else:
-        filter_result = _simple_filter(user, jobs)
+        filter_result = ""
 
     # 디버깅용: 필터링 결과 로깅 (선택)
     if filter_result.rejected:
