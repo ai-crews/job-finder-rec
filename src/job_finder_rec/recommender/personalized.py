@@ -91,7 +91,7 @@ def _education_filter(user: UserPreferences, result: FilterResult) -> FilterResu
     """
     [맞춤형 필터] 학력 필터
     
-    사용자가 선택한 학력과 공고의 요구 학력을 비교.
+    사용자가 선택한 학력과 공고의 요구 학력을 비교
     
     통과 조건:
     1. 사용자가 학력을 선택하지 않은 경우 → 필터링 안함 (항상 통과)
