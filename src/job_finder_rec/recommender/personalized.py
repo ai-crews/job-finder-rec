@@ -159,6 +159,41 @@ def _education_filter(user: UserPreferences, result: FilterResult) -> FilterResu
     return FilterResult(passed=new_passed, rejected=new_rejected)
 
 
+def _company_size_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
+    """
+    [맞춤형 필터] 기업규모 필터
+    
+    사용자가 선택한 기업규모와 공고의 기업규모를 비교
+    
+    통과 조건:
+    1. 사용자가 기업규모를 선택하지 않은 경우 → 필터링 안함 (항상 통과)
+    2. 공고의 기업규모가 없으면 → 항상 통과 (안전성)
+    3. 공고의 기업규모가 사용자 선택에 포함되면 → 통과
+    4. 그 외 → 탈락
+    
+    예시:
+    - 사용자 선택: ["대기업", "중견기업"]
+    - 공고1: 없음 → 통과 (기업규모 없음)
+    - 공고2: "대기업" → 통과 (포함)
+    - 공고3: "스타트업" → 탈락 (미포함)
+    
+    Returns:
+        FilterResult: 필터 결과
+    """
+    if not user.preferred_company_sizes:
+        return result
+    
+    new_passed = []
+    new_rejected = list(result.rejected)
+    
+    for j in result.passed:
+        # 교집합: 공고의 기업규모가 사용자 기업규모에 일치하면 통과
+        if not j.company_size or j.company_size in user.preferred_company_sizes:
+            new_passed.append(j)
+        else:
+            new_rejected.append(RejectedJob(job=j, reason=FilterReason.COMPANY_SIZE))
+    
+    return FilterResult(passed=new_passed, rejected=new_rejected)
 
 def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
     """
