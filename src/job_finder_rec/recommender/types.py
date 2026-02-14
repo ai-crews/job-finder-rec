@@ -18,6 +18,7 @@ class UserPreferences:
     current_education: List[str] = field(default_factory=list)  # ["학사 졸업(예정)", "석사 졸업(예정)", ...]
     preferred_company_sizes: List[str] = field(default_factory=list)
     interested_industries: List[str] = field(default_factory=list)
+    has_english_score: Optional[str] = None  # "예", "아니오"
 
 
 @dataclass(frozen=True)

@@ -15,6 +15,7 @@ Q_JOB_3 = "희망 직무 3순위"
 Q_COMPANY_SIZE = "선호하시는 기업 규모를 선택해주세요. (복수 선택 가능)"
 Q_INDUSTRIES = "관심 있는 산업군을 선택해주세요."
 Q_SORT = "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?"
+Q_ENGLISH_SCORE = "영어 어학 성적을 보유하고 계신가요?"
 
 
 def _normalize_key(k: str) -> str:
@@ -94,6 +95,7 @@ def normalize_user(record: Dict[str, Any]) -> UserPreferences:
         current_education=(_get_by_key_variants(record, Q_CURRENT_EDU) or "").strip() or None,
         preferred_company_sizes=_split_csv(( _get_by_key_variants(record, Q_COMPANY_SIZE) or "").strip()),
         interested_industries=_split_csv(( _get_by_key_variants(record, Q_INDUSTRIES) or "").strip()),
+        has_english_score=(_get_by_key_variants(record, Q_ENGLISH_SCORE) or "").strip() or None,
     )
     return prefs
 

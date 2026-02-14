@@ -233,7 +233,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
     except Exception:
         pass
 
-    # fallback: 기존 더미
+    # fallback: 기본 더미
     return [
         {
             "이메일 주소": "demo1@example.com",
@@ -244,6 +244,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "학사",
             "희망 정렬 기준" : "deadline",
+            "영어 어학 성적을 보유하고 계신가요?": "예",
         },
         {
             "이메일 주소": "demo2@example.com",
@@ -254,5 +255,6 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "",
             "희망 정렬 기준" : "recommend",
+            "영어 어학 성적을 보유하고 계신가요?": "아니오",
         },
     ]
