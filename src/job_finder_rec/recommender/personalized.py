@@ -195,6 +195,44 @@ def _company_size_filter(user: UserPreferences, result: FilterResult) -> FilterR
     
     return FilterResult(passed=new_passed, rejected=new_rejected)
 
+
+def _industry_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
+    """
+    [맞춤형 필터] 산업 필터
+    
+    사용자가 선택한 산업과 공고의 산업을 비교
+    
+    통과 조건:
+    1. 사용자가 산업을 선택하지 않은 경우 → 필터링 안함 (항상 통과)
+    2. 공고의 산업이 없으면 → 항상 통과 (안전성)
+    3. 공고의 산업이 사용자 선택에 포함되면 → 통과
+    4. 그 외 → 탈락
+    
+    예시:
+    - 사용자 선택: ["IT", "금융"]
+    - 공고1: 없음 → 통과 (산업 없음)
+    - 공고2: "IT" → 통과 (포함)
+    - 공고3: "교육" → 탈락 (미포함)
+    
+    Returns:
+        FilterResult: 필터 결과
+    """
+    if not user.interested_industries:
+        return result
+    
+    new_passed = []
+    new_rejected = list(result.rejected)
+    
+    for j in result.passed:
+        # 교집합: 공고의 산업이 사용자 산업에 일치하면 통과
+        if not j.industry or j.industry in user.interested_industries:
+            new_passed.append(j)
+        else:
+            new_rejected.append(RejectedJob(job=j, reason=FilterReason.INDUSTRY))
+    
+    return FilterResult(passed=new_passed, rejected=new_rejected)
+
+
 def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
     """
     필터링: 전역 하드필터 + 맞춤형 필터 (Reason 기록 포함)
