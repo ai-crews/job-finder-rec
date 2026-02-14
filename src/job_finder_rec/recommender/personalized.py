@@ -13,9 +13,22 @@ def _employment_type_filter(user: UserPreferences, result: FilterResult) -> Filt
     """
     [맞춤형 필터] 고용형태 필터
     
-    - 사용자가 고용형태를 선택하지 않으면 필터링 안함
-    - 공고의 고용형태가 비어있거나 "확인불가"이면 통과
-    - 공고의 고용형태가 사용자 선택목록에 있으면 통과
+    사용자가 선택한 고용형태와 공고의 고용형태를 비교
+    
+    통과 조건:
+    1. 사용자가 고용형태를 선택하지 않은 경우 → 필터링 안함 (항상 통과)
+    2. 공고의 고용형태가 없으면 → 항상 통과
+    3. 공고의 고용형태와 사용자 선택 고용형태에 교집합이 있으면 → 통과
+    4. 그 외 → 탈락
+    
+    예시:
+    - 사용자: ["계약직", "인턴"]
+    - 공고1: [] → 통과 (고용형태 없음)
+    - 공고2: ["계약직"] → 통과 (교집합 존재)
+    - 공고3: ["정규직"] → 탈락 (교집합 없음)
+    
+    Returns:
+        FilterResult: 필터 결과
     """
     if not user.target_employment_types:
         return result
@@ -24,7 +37,13 @@ def _employment_type_filter(user: UserPreferences, result: FilterResult) -> Filt
     new_rejected = list(result.rejected)
     
     for j in result.passed:
-        if j.employment_type in ("", "확인불가") or j.employment_type in user.target_employment_types:
+        # 공고의 고용형태가 없으면 통과
+        if not j.processed_employment_type:
+            new_passed.append(j)
+            continue
+        
+        # 교집합: 공고의 고용형태 중 사용자가 선택한 것이 하나라도 있으면 통과
+        if any(emp in user.target_employment_types for emp in j.processed_employment_type):
             new_passed.append(j)
         else:
             new_rejected.append(RejectedJob(job=j, reason=FilterReason.EMPLOYMENT))
