@@ -51,24 +51,35 @@ def _employment_type_filter(user: UserPreferences, result: FilterResult) -> Filt
     return FilterResult(passed=new_passed, rejected=new_rejected)
 
 
-def _job_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
+def _position_filter(user: UserPreferences, result: FilterResult) -> FilterResult:
     """
     [맞춤형 필터] 직무 필터
     
-    - processed_position_name에 사용자 직무 키워드가 포함되어야 함
+    사용자의 직무 Top3과 공고의 직무를 정규화하여 비교
+    
+    통과 조건:
+    1. 사용자가 직무를 선택하지 않은 경우 → 필터링 안함 (항상 통과)
+    2. 공고의 직무 리스트와 사용자 직무 Top3의 교집합이 있으면 → 통과
+    3. 그 외 → 탈락
+    
+    예시:
+    - 사용자 직무: ["데이터분석가", "ML엔지니어"]
+    - 공고1: ["ML엔지니어"] → 통과 (교집합 존재)
+    - 공고2: ["AI기획자"] → 탈락 (교집합 없음)
+    - 공고3: ["데이터분석가", "AI기획자"] → 통과 (교집합 존재)
+    
+    Returns:
+        FilterResult: 필터 결과
     """
     if not user.target_jobs:
         return result
     
-    def norm(s: str) -> str:
-        return (s or "").replace(" ", "").lower()
-    
-    keywords = [norm(x) for x in user.target_jobs if x]
     new_passed = []
     new_rejected = list(result.rejected)
     
     for j in result.passed:
-        if any(k in norm(j.processed_position_name) for k in keywords):
+        # 교집합: 공고의 직무와 사용자 직무에 하나라도 일치하면 통과
+        if any(pos in user.target_jobs for pos in j.processed_position_name):
             new_passed.append(j)
         else:
             new_rejected.append(RejectedJob(job=j, reason=FilterReason.JOB))
