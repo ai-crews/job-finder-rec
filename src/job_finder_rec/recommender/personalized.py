@@ -233,28 +233,37 @@ def _industry_filter(user: UserPreferences, result: FilterResult) -> FilterResul
     return FilterResult(passed=new_passed, rejected=new_rejected)
 
 
-def _simple_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
+def apply_filter(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
     """
-    필터링: 전역 하드필터 + 맞춤형 필터 (Reason 기록 포함)
+    전체 필터 적용: 전역 하드필터 + 맞춤형 필터 (탈락 사유 기록)
     
-    **전역 하드필터(절대조건):**
-    - 마감일: 하루 이상 남은 공고만
+    적용 순서:
+    1. 전역 하드필터: 마감일 (하루 이상 남은 공고만)
+    2. 맞춤형 필터 순서:
+        - 직무
+        - 고용형태
+        - 학력
+        - 기업규모
+        - 산업
     
-    **맞춤형 필터(개인화):**
-    - 고용형태: 사용자 선택 유형만 (미선택/확인불가는 통과)
-    - 직무: processed_position_name에 사용자 직무 키워드 포함
+    예시:
+    - 공고 100개 → 마감 필터 → 80개
+    - 80개 → 직무 필터 → 40개
+    - 40개 → 학력 필터 → 30개
+    - ...
     
     Returns:
-        FilterResult: 필터 결과 (통과한 공고 + 탈락 공고들의 사유)
+        FilterResult: 필터 결과 (통과한 공고 + 탈락 사유 추적)
     """
     # 1) 전역 하드필터: 마감일
     result = global_deadline_filter(jobs)
     
-    # 2) 맞춤형 필터: 고용형태
+    # 2) 맞춤형 필터: 순서대로 적용
+    result = _position_filter(user, result)
     result = _employment_type_filter(user, result)
-    
-    # 3) 맞춤형 필터: 직무 키워드
-    result = _job_filter(user, result)
+    result = _education_filter(user, result)
+    result = _company_size_filter(user, result)
+    result = _industry_filter(user, result)
     
     return result
 
