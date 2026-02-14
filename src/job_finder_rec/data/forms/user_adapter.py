@@ -5,16 +5,16 @@ import re
 EMAIL_KEYS = "이메일"
 
 Q_NAME = "성함을 입력해주세요."
-Q_GENDER = "성별을 선택해주세요."
+Q_GENDER = "성별을 선택해주세요. [남/여]"
 Q_BIRTH_YEAR = "출생연도를 입력해주세요. (ex.2003)"
-Q_CURRENT_EDU = "현재 학력 정보를 선택해주세요."
-Q_EMPLOYMENT = "희망하시는 고용형태를 선택해주세요. (복수 선택 가능)"
+Q_CURRENT_EDU = "찾고 계신 학력 정보를 선택해주세요."
+Q_EMPLOYMENT = "희망하시는 고용 형태를 선택해주세요. (복수 선택 가능)"
 Q_JOB_1 = "희망 직무 1순위 (필수응답)"
 Q_JOB_2 = "희망 직무 2순위"
 Q_JOB_3 = "희망 직무 3순위"
 Q_COMPANY_SIZE = "선호하시는 기업 규모를 선택해주세요. (복수 선택 가능)"
 Q_INDUSTRIES = "관심 있는 산업군을 선택해주세요."
-Q_SORT = "희망 정렬 기준"
+Q_SORT = "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?"
 
 
 def _normalize_key(k: str) -> str:
