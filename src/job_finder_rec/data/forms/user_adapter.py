@@ -55,6 +55,21 @@ def _split_csv(s: str) -> List[str]:
     return [x.strip() for x in s.split(",") if x and x.strip()]
 
 
+def _normalize_sort_value(raw: str) -> str:
+    if not raw:
+        return ""
+    s = raw.strip().lower()
+    # Accept known English keywords
+    if s in ("deadline", "recommend"):
+        return s
+    # Map common Korean phrases to internal values
+    if "마감" in s:
+        return "deadline"
+    if "추천" in s:
+        return "recommend"
+    return ""
+
+
 def _get_email(record: Dict[str, Any]) -> Optional[str]:
     v = _get_by_key_variants(record, EMAIL_KEYS)
     if isinstance(v, str) and "@" in v:
@@ -87,12 +102,11 @@ def normalize_user(record: Dict[str, Any]) -> UserPreferences:
         email=email,
         target_jobs=target_jobs,
         target_employment_types=_split_csv(( _get_by_key_variants(record, Q_EMPLOYMENT) or "").strip()),
-        sort=(_get_by_key_variants(record, Q_SORT) or "recommend").strip(),
+        sort=_normalize_sort_value((_get_by_key_variants(record, Q_SORT) or "").strip()),
         raw=record,
-        name=(_get_by_key_variants(record, Q_NAME) or "").strip() or None,
         gender=(_get_by_key_variants(record, Q_GENDER) or "").strip() or None,
         birth_year=birth_year,
-        current_education=(_get_by_key_variants(record, Q_CURRENT_EDU) or "").strip() or None,
+        current_education=_split_csv(( _get_by_key_variants(record, Q_CURRENT_EDU) or "").strip()),
         preferred_company_sizes=_split_csv(( _get_by_key_variants(record, Q_COMPANY_SIZE) or "").strip()),
         interested_industries=_split_csv(( _get_by_key_variants(record, Q_INDUSTRIES) or "").strip()),
         has_english_score=(_get_by_key_variants(record, Q_ENGLISH_SCORE) or "").strip() or None,
