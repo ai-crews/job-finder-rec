@@ -37,7 +37,7 @@ class JobPosting:
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
     
-    processed_language_required: str
+    processed_language_score_required: str
 
     # min_education_level: str
     # max_education_level: str
@@ -45,7 +45,7 @@ class JobPosting:
 
     industry: Optional[str] = None
     company_size: Optional[str] = None
-    application_start_date: Optional[str] = None
+    # application_start_date: Optional[str] = None
     application_deadline_date: Optional[str] = None
     application_deadline_time: Optional[str] = None
 
@@ -89,7 +89,7 @@ class JobPosting:
         if isinstance(processed_employment_type, str):
             processed_employment_type = [processed_employment_type] if processed_employment_type else []
 
-        processed_language_required = src.get("processed_language_required") or ""
+        processed_language_score_required = src.get("processed_language_score_required") or ""
 
         processed_education_level_list = src.get("processed_education_level_list") or []
         if isinstance(processed_education_level_list, str):
@@ -98,7 +98,7 @@ class JobPosting:
         industry = src.get("industry")
         company_size = src.get("company_size")
 
-        application_start_date = src.get("application_start_date")
+        # application_start_date = src.get("application_start_date")
         application_deadline_date = src.get("application_deadline_date")
         application_deadline_time = src.get("application_deadline_time")
 
@@ -127,11 +127,11 @@ class JobPosting:
             processed_position_name=processed_position_name,
             processed_experience_level=processed_experience_level,
             processed_employment_type=processed_employment_type,
-            processed_language_required=processed_language_required,
+            processed_language_score_required=processed_language_score_required,
             processed_education_level_list=processed_education_level_list,
             industry=industry,
             company_size=company_size,
-            application_start_date=application_start_date,
+            # application_start_date=application_start_date,
             application_deadline_date=application_deadline_date,
             application_deadline_time=application_deadline_time,
             deadline=deadline,
@@ -142,7 +142,6 @@ class JobPosting:
 @dataclass(frozen=True)
 class RecommendationItem:
     job: JobPosting
-    is_preferred_company: bool
     score: float = 0.0
 
 
