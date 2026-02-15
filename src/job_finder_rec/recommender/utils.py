@@ -130,16 +130,13 @@ def build_requests_for_user(user, feed_type, method, top_n):
     """
     Create a RecommendRequest from a UserPreferences object.
     
-    Reads user.raw to extract:
-    - sort: 'deadline', 'recommend'
+    Reads user.sort which is already normalized by normalize_user().
     
     feed_type and method are fixed (not read from user).
     """
     from job_finder_rec.recommender.types import RecommendRequest, SortOption
 
-    raw = getattr(user, "raw", {}) or {}
-
-    sort = safe_enum(SortOption, raw.get("희망 정렬 기준"), SortOption.RECOMMENDATION)
+    sort = safe_enum(SortOption, user.sort, SortOption.RECOMMENDATION)
 
     req = RecommendRequest(feed_type=feed_type, method=method, sort=sort, top_n=top_n)
     return req
@@ -243,7 +240,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "희망 고용 형태 (복수선택)": "정규직",
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "학사",
-            "희망 정렬 기준" : "deadline",
+            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "deadline",
             "영어 어학 성적을 보유하고 계신가요?": "예",
         },
         {
@@ -254,7 +251,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "희망 고용 형태 (복수선택)": "",
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "",
-            "희망 정렬 기준" : "recommend",
+            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "recommend",
             "영어 어학 성적을 보유하고 계신가요?": "아니오",
         },
     ]
