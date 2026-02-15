@@ -275,7 +275,7 @@ def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "
     - 정렬/점수화는 추후 이슈에서 구현
     - 필터링 결과와 탈락 사유를 추적
     """
-    if req.method == "filter":
+    if req.method == PersonalizedMethod.FILTER:
         filter_result = apply_filter(user, jobs)
     else:
         filter_result = ""
@@ -287,6 +287,6 @@ def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "
         # print(f"[탈락 사유] {count_by_reason}")
 
     items: List[RecommendationItem] = []
-    for j in filter_result.passed[: req.top_n]:
-        items.append(RecommendationItem(job=j, is_preferred_company=False, score=0.0))
+    for j in filter_result.passed:
+        items.append(RecommendationItem(job=j, score=0.0))
     return items
