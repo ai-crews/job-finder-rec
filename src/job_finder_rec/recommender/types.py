@@ -15,9 +15,10 @@ class UserPreferences:
     name: Optional[str] = None
     gender: Optional[str] = None
     birth_year: Optional[int] = None
-    current_education: Optional[str] = None
+    current_education: List[str] = field(default_factory=list)  # ["학사 졸업(예정)", "석사 졸업(예정)", ...]
     preferred_company_sizes: List[str] = field(default_factory=list)
     interested_industries: List[str] = field(default_factory=list)
+    has_english_score: Optional[str] = None  # "예", "아니오"
 
 
 @dataclass(frozen=True)
@@ -29,21 +30,22 @@ class JobPosting:
     company_name: str
     job_title: str
     # position_name: str
-    processed_position_name: str
+    processed_position_name: List[str]              # ["ML엔지니어", "AI개발자"]
 
     # min_experience_level: str
     # max_experience_level: str
     processed_experience_level: str
-    employment_type: str
+    processed_employment_type: List[str]            # ["정규직"]
+    
+    processed_language_score_required: str
 
     # min_education_level: str
     # max_education_level: str
-    processed_education_level_list: str
+    processed_education_level_list: List[str]
 
     industry: Optional[str] = None
     company_size: Optional[str] = None
-
-    application_start_date: Optional[str] = None
+    # application_start_date: Optional[str] = None
     application_deadline_date: Optional[str] = None
     application_deadline_time: Optional[str] = None
 
@@ -76,42 +78,29 @@ class JobPosting:
         """
         company_name = src.get("company_name") or ""
         job_title = src.get("job_title") or ""
-        processed_position_name = src.get("processed_position_name") or ""
 
-        # group_name = src.get("group_name") or ""
-        # position_name = src.get("position_name") or ""
+        processed_position_name = src.get("processed_position_name") or []
+        if isinstance(processed_position_name, str):
+            processed_position_name = [processed_position_name] if processed_position_name else []
 
         processed_experience_level = src.get("processed_experience_level") or ""
-        employment_type = src.get("employment_type") or ""
 
-        # min_experience_level = src.get("min_experience_level") or ""
-        # max_experience_level = src.get("max_experience_level") or ""
+        processed_employment_type = src.get("processed_employment_type") or []
+        if isinstance(processed_employment_type, str):
+            processed_employment_type = [processed_employment_type] if processed_employment_type else []
 
-        processed_education_level_list = src.get("processed_education_level_list") or ""
+        processed_language_score_required = src.get("processed_language_score_required") or ""
 
-        # min_education_level = src.get("min_education_level") or ""
-        # max_education_level = src.get("max_education_level") or ""
+        processed_education_level_list = src.get("processed_education_level_list") or []
+        if isinstance(processed_education_level_list, str):
+            processed_education_level_list = [processed_education_level_list] if processed_education_level_list else []
 
         industry = src.get("industry")
         company_size = src.get("company_size")
 
-        application_start_date = src.get("application_start_date")
+        # application_start_date = src.get("application_start_date")
         application_deadline_date = src.get("application_deadline_date")
         application_deadline_time = src.get("application_deadline_time")
-
-        # team_introduction = src.get("team_introduction")
-        # job_duties = src.get("job_duties")
-        # qualifications = src.get("qualifications")
-        # preferred_qualifications = src.get("preferred_qualifications")
-
-        # work_location = src.get("work_location")
-        # work_department = src.get("work_department")
-        # recruitment_process = src.get("recruitment_process")
-        # other_details = src.get("other_details")
-
-        # application_link = src.get("application_link")
-        # image_filename = src.get("image_filename")
-        # crawling_datetime = src.get("crawling_datetime")
 
         # parse deadline into datetime when possible
         deadline: Optional[datetime] = None
@@ -137,11 +126,12 @@ class JobPosting:
             job_title=job_title,
             processed_position_name=processed_position_name,
             processed_experience_level=processed_experience_level,
-            employment_type=employment_type,
+            processed_employment_type=processed_employment_type,
+            processed_language_score_required=processed_language_score_required,
             processed_education_level_list=processed_education_level_list,
             industry=industry,
             company_size=company_size,
-            application_start_date=application_start_date,
+            # application_start_date=application_start_date,
             application_deadline_date=application_deadline_date,
             application_deadline_time=application_deadline_time,
             deadline=deadline,
@@ -152,7 +142,6 @@ class JobPosting:
 @dataclass(frozen=True)
 class RecommendationItem:
     job: JobPosting
-    is_preferred_company: bool
     score: float = 0.0
 
 
@@ -169,6 +158,41 @@ class SortOption(str, Enum):
 class PersonalizedMethod(str, Enum):
     FILTER = "filter"
     EMBEDDING = "embedding"
+
+
+class FilterReason(str, Enum):
+    """필터링 탈락 사유 (하드필터)"""
+    DEADLINE = "deadline"              # 마감일 필터
+    JOB = "job"                        # 직무 필터
+    EMPLOYMENT = "employment"          # 고용형태 필터
+    COMPANY_SIZE = "company_size"      # 기업규모 필터
+    INDUSTRY = "industry"              # 산업 필터
+    EDUCATION = "education"            # 학력 필터
+
+
+@dataclass(frozen=True)
+class RejectedJob:
+    """필터링에서 탈락한 공고 기록"""
+    job: JobPosting
+    reason: FilterReason
+    
+
+@dataclass(frozen=True)
+class FilterResult:
+    """필터링 결과 추적
+    
+    - passed: 필터를 통과한 공고 목록
+    - rejected: 탈락한 공고 + 탈락 사유
+    - counts: 사유별 탈락 카운트 (디버깅/로깅용)
+    """
+    passed: List[JobPosting]
+    rejected: List[RejectedJob] = field(default_factory=list)
+    
+    @property
+    def counts(self) -> Dict[str, int]:
+        """사유별 탈락 카운트"""
+        from collections import Counter
+        return dict(Counter(r.reason.value for r in self.rejected))
 
 
 @dataclass(frozen=True)

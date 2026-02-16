@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import sys
+import json
+from datetime import datetime
 
 
 def _ensure_src_on_path() -> None:
@@ -57,27 +59,74 @@ def main() -> None:
     method = PersonalizedMethod.FILTER
     top_n = 10
 
-    # ===== 4) 유저별 요청 생성 및 실행 =====
+    # ===== 4) 유저별 요청 생성 및 실행 + 결과 수집 =====
+    all_results = []
+    
     for i, u in enumerate(users):
         req = build_requests_for_user(u, feed_type, method, top_n)
-
         recs = recommend(u, jobs, req)
 
         print("\n==============================")
         print(f"👤USER {i+1} : {u.email} | feed={req.feed_type.value} | method={req.method.value} | sort={req.sort.value} | top_n={req.top_n}")
         print(f"추천 결과: {len(recs)}개")
 
-        for i, item in enumerate(recs[: req.top_n], 1):
+        # 결과 수집
+        user_recs = []
+        for rank, item in enumerate(recs, 1):
             j = item.job
-            print(f"{i:02d}. [{j.company_name}] {j.job_title} | {j.processed_position_name}")
-            # if j.application_link:
-            #     print(f"    - link: {j.application_link}")
+            print(f"{rank:02d}. [{j.company_name}] {j.job_title} | {j.processed_position_name}")
             if j.application_deadline_date:
-                # deadline(datetime)은 types에 있지만, 출력은 원본 키로도 충분
                 t = j.application_deadline_time or ""
                 print(f"    - deadline: {j.application_deadline_date} {t}".strip())
+            
+            user_recs.append({
+                "rank": rank,
+                "company_name": j.company_name,
+                "job_title": j.job_title,
+                "position_name": j.processed_position_name,
+                "employment_type": j.processed_employment_type,
+                "education_level": j.processed_education_level_list,
+                "company_size": j.company_size,
+                "industry": j.industry,
+                "deadline": j.application_deadline_date,
+                "score": item.score,
+            })
+        
+        all_results.append({
+            "email": u.email,
+            "feed_type": req.feed_type.value,
+            "sort_method": req.sort.value,
+            "method": req.method.value,
+            # 유저 필터 조건
+            "filter_criteria": {
+                "target_jobs": u.target_jobs,
+                "target_employment_types": u.target_employment_types,
+                "current_education": u.current_education,
+                "preferred_company_sizes": u.preferred_company_sizes,
+                "interested_industries": u.interested_industries,
+                "has_english_score": u.has_english_score,
+            },
+            "total_recommendations": len(recs),
+            "recommendations": user_recs,
+        })
 
+    # ===== 5) 결과 내보내기 =====
+    _export_recommendations(all_results)
     print("\n✅ main pipeline done.")
+
+
+def _export_recommendations(results: list) -> None:
+    """추천 결과를 JSON 파일로 내보내기"""
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = os.path.join(output_dir, f"recommendations_{timestamp}.json")
+    
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    
+    print(f"✅ 추천 결과 내보내기: {output_file}")
 
 
 if __name__ == "__main__":

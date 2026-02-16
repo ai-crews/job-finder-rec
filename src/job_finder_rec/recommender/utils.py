@@ -1,6 +1,78 @@
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from datetime import date as _date
+
+from job_finder_rec.recommender.types import FilterResult, RejectedJob, FilterReason
+
+
+def map_education_level(education_str: Optional[str]) -> str:
+    """
+    학력 문자열에서 키워드 추출
+    
+    예:
+    - "학사 졸업(예정)" → "학사"
+    - "석사 졸업(예정)" → "석사"
+    - "박사 졸업(예정)" → "박사"
+    - "학력무관" → "학력무관"
+    
+    Returns:
+        str: 추출된 학력 키워드 ("학사", "석사", "박사", "학력무관" 중 하나, 없으면 "")
+    """
+    if not education_str:
+        return ""
+    
+    s = education_str.strip()
+    
+    # 박사 확인
+    if "박사" in s:
+        return "박사"
+    
+    # 석사 확인
+    if "석사" in s:
+        return "석사"
+    
+    # 학사 확인
+    if "학사" in s:
+        return "학사"
+    
+    # 학력무관 확인
+    if "학력무관" in s:
+        return "학력무관"
+    
+    return ""
+
+
+def global_deadline_filter(jobs: List[Any], today: Optional[_date] = None) -> FilterResult:
+    """
+    전역 하드필터: 마감일 필터
+
+    - 발송일(today) 기준으로 `application_deadline_date`가 하루 이상 남은 공고만 포함
+    - `application_deadline_time`은 판단에 사용하지 않음 (날짜만 비교)
+    - 마감일이 없는 공고는 필터 적용 안함 (통과시킴)
+    - 파싱 실패 시 안전을 위해 통과
+    """
+    if today is None:
+        today = _date.today()
+
+    passed: List[Any] = []
+    rejected: List[RejectedJob] = []
+
+    for j in jobs:
+        adate = getattr(j, "application_deadline_date", None)
+        if not adate:
+            passed.append(j)
+            continue
+        try:
+            deadline_date = datetime.strptime(adate, "%Y-%m-%d").date()
+            if deadline_date > today:
+                passed.append(j)
+            else:
+                rejected.append(RejectedJob(job=j, reason=FilterReason.DEADLINE))
+        except (ValueError, TypeError):
+            passed.append(j)
+
+    return FilterResult(passed=passed, rejected=rejected)
 
 
 def build_deadline(deadline_date: Optional[str], deadline_time: Optional[str]) -> Optional[datetime]:
@@ -58,19 +130,17 @@ def build_requests_for_user(user, feed_type, method, top_n):
     """
     Create a RecommendRequest from a UserPreferences object.
     
-    Reads user.raw to extract:
-    - sort: 'deadline', 'recommend'
+    Reads user.sort which is already normalized by normalize_user().
     
     feed_type and method are fixed (not read from user).
     """
     from job_finder_rec.recommender.types import RecommendRequest, SortOption
 
-    raw = getattr(user, "raw", {}) or {}
-
-    sort = safe_enum(SortOption, raw.get("희망 정렬 기준"), SortOption.RECOMMENDATION)
+    sort = safe_enum(SortOption, user.sort, SortOption.RECOMMENDATION)
 
     req = RecommendRequest(feed_type=feed_type, method=method, sort=sort, top_n=top_n)
     return req
+
 
 
 def load_sheet_records() -> Optional[List[Dict[str, Any]]]:
@@ -160,7 +230,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
     except Exception:
         pass
 
-    # fallback: 기존 더미
+    # fallback: 기본 더미
     return [
         {
             "이메일 주소": "demo1@example.com",
@@ -170,7 +240,8 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "희망 고용 형태 (복수선택)": "정규직",
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "학사",
-            "희망 정렬 기준" : "deadline",
+            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "deadline",
+            "영어 어학 성적을 보유하고 계신가요?": "예",
         },
         {
             "이메일 주소": "demo2@example.com",
@@ -180,6 +251,7 @@ def dummy_user_records() -> List[Dict[str, Any]]:
             "희망 고용 형태 (복수선택)": "",
             "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
             "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "",
-            "희망 정렬 기준" : "recommend",
+            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "recommend",
+            "영어 어학 성적을 보유하고 계신가요?": "아니오",
         },
     ]

@@ -207,3 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 data/prod
+.vscode
+output
+analysis.ipynb
