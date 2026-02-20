@@ -67,20 +67,22 @@ def main() -> None:
         recs = recommend(u, jobs, req)
 
         print("\n==============================")
-        print(f"👤USER {i+1} : {u.email} | feed={req.feed_type.value} | method={req.method.value} | sort={req.sort.value} | top_n={req.top_n}")
+        print(f"👤USER {i+1} : {u.email} | feed={req.feed_type.value} | sort={req.sort.value} | target_job={u.target_jobs}")
         print(f"추천 결과: {len(recs)}개")
 
         # 결과 수집
         user_recs = []
         for rank, item in enumerate(recs, 1):
             j = item.job
-            print(f"{rank:02d}. [{j.company_name}] {j.job_title} | {j.processed_position_name}")
+            priority_label = f"P{item.job_priority_rank}" if item.job_priority_rank else "P-"
+            print(f"{rank:02d}. [{priority_label}] [{j.company_name}] {j.job_title} | {j.processed_position_name}")
             if j.application_deadline_date:
                 t = j.application_deadline_time or ""
                 print(f"    - deadline: {j.application_deadline_date} {t}".strip())
             
             user_recs.append({
                 "rank": rank,
+                "job_priority_rank": item.job_priority_rank,
                 "company_name": j.company_name,
                 "job_title": j.job_title,
                 "position_name": j.processed_position_name,
