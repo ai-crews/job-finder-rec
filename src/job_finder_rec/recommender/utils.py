@@ -91,19 +91,20 @@ def safe_enum(enum_cls, value, fallback):
         return fallback
 
 
-def build_requests_for_user(user, feed_type, method, top_n):
+def build_requests_for_user(user):
     """
     Create a RecommendRequest from a UserPreferences object.
-    
+
     Reads user.sort which is already normalized by normalize_user().
-    
-    feed_type and method are fixed (not read from user).
+
+    method is fixed (not read from user).
+    feed_type is not included — the engine always runs personalized then explore.
     """
     from job_finder_rec.recommender.types import RecommendRequest, SortOption
 
     sort = safe_enum(SortOption, user.sort, SortOption.RECOMMENDATION)
 
-    req = RecommendRequest(feed_type=feed_type, method=method, sort=sort, top_n=top_n)
+    req = RecommendRequest(sort=sort)
     return req
 
 

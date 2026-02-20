@@ -198,7 +198,4 @@ class FilterResult:
 
 @dataclass(frozen=True)
 class RecommendRequest:
-    feed_type: FeedType = FeedType.PERSONALIZED
     sort: SortOption = SortOption.RECOMMENDATION
-    method: PersonalizedMethod = PersonalizedMethod.FILTER
-    top_n: int = 10
