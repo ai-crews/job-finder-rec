@@ -25,7 +25,7 @@ from job_finder_rec.data.jobs.job_loader import load_all_job_data
 from job_finder_rec.data.jobs.job_adapter import adapt_jobs
 
 from job_finder_rec.recommender.engine import recommend
-from job_finder_rec.recommender.types import FeedType, PersonalizedMethod
+from job_finder_rec.recommender.types import PersonalizedMethod
 
 from job_finder_rec.data.forms.user_adapter import normalize_users
 from job_finder_rec.recommender.utils import build_requests_for_user, load_sheet_records, dummy_user_records
@@ -54,51 +54,49 @@ def main() -> None:
     users = normalize_users(records)
     print(f"✅ 유저 정규화 완료: {len(users)}명")
 
-    # ===== 3) 고정 추천 설정 =====
-    feed_type = FeedType.PERSONALIZED
-    method = PersonalizedMethod.FILTER
-    top_n = 10
-
     # ===== 4) 유저별 요청 생성 및 실행 + 결과 수집 =====
     all_results = []
     
     for i, u in enumerate(users):
-        req = build_requests_for_user(u, feed_type, method, top_n)
-        recs = recommend(u, jobs, req)
+        req = build_requests_for_user(u)
+        personalized_recs, explore_recs = recommend(u, jobs, req)
 
         print("\n==============================")
-        print(f"👤USER {i+1} : {u.email} | feed={req.feed_type.value} | sort={req.sort.value} | target_job={u.target_jobs}")
-        print(f"추천 결과: {len(recs)}개")
+        print(f"👤USER {i+1} : {u.email} | sort={req.sort.value} | target_job={u.target_jobs}")
+        print(f"[personalized] {len(personalized_recs)}개 | [explore] {len(explore_recs)}개")
 
-        # 결과 수집
-        user_recs = []
-        for rank, item in enumerate(recs, 1):
-            j = item.job
-            priority_label = f"P{item.job_priority_rank}" if item.job_priority_rank else "P-"
-            print(f"{rank:02d}. [{priority_label}] [{j.company_name}] {j.job_title} | {j.processed_position_name}")
-            if j.application_deadline_date:
-                t = j.application_deadline_time or ""
-                print(f"    - deadline: {j.application_deadline_date} {t}".strip())
-            
-            user_recs.append({
-                "rank": rank,
-                "job_priority_rank": item.job_priority_rank,
-                "company_name": j.company_name,
-                "job_title": j.job_title,
-                "position_name": j.processed_position_name,
-                "employment_type": j.processed_employment_type,
-                "education_level": j.processed_education_level_list,
-                "company_size": j.company_size,
-                "industry": j.industry,
-                "deadline": j.application_deadline_date,
-                "score": item.score,
-            })
-        
+        def _build_rec_list(recs, start_rank=1):
+            result = []
+            for rank, item in enumerate(recs, start_rank):
+                j = item.job
+                priority_label = f"P{item.job_priority_rank}" if item.job_priority_rank else "P-"
+                print(f"{rank:02d}. [{priority_label}] [{j.company_name}] {j.job_title} | {j.processed_position_name}")
+                if j.application_deadline_date:
+                    t = j.application_deadline_time or ""
+                    print(f"    - deadline: {j.application_deadline_date} {t}".strip())
+                result.append({
+                    "rank": rank,
+                    "job_priority_rank": item.job_priority_rank,
+                    "company_name": j.company_name,
+                    "job_title": j.job_title,
+                    "position_name": j.processed_position_name,
+                    "employment_type": j.processed_employment_type,
+                    "education_level": j.processed_education_level_list,
+                    "company_size": j.company_size,
+                    "industry": j.industry,
+                    "deadline": j.application_deadline_date,
+                    "score": item.score,
+                })
+            return result
+
+        print("\n--- [PERSONALIZED] ---")
+        p_recs = _build_rec_list(personalized_recs, start_rank=1)
+        print("\n--- [EXPLORE] ---")
+        e_recs = _build_rec_list(explore_recs, start_rank=1)
+
         all_results.append({
             "email": u.email,
-            "feed_type": req.feed_type.value,
             "sort_method": req.sort.value,
-            "method": req.method.value,
             # 유저 필터 조건
             "filter_criteria": {
                 "target_jobs": u.target_jobs,
@@ -108,8 +106,10 @@ def main() -> None:
                 "interested_industries": u.interested_industries,
                 "has_english_score": u.has_english_score,
             },
-            "total_recommendations": len(recs),
-            "recommendations": user_recs,
+            "personalized_total": len(p_recs),
+            "personalized_recommendations": p_recs,
+            "explore_total": len(e_recs),
+            "explore_recommendations": e_recs,
         })
 
     # ===== 5) 결과 내보내기 =====
