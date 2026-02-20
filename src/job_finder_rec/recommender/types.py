@@ -143,6 +143,7 @@ class JobPosting:
 class RecommendationItem:
     job: JobPosting
     score: float = 0.0
+    job_priority_rank: Optional[int] = None  # 직무 우선순위 버킷 (1/2/3, None=미매칭)
 
 
 class FeedType(str, Enum):
