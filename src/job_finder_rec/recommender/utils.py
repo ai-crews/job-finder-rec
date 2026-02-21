@@ -1,9 +1,6 @@
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from datetime import date as _date
-
-from job_finder_rec.recommender.types import FilterResult, RejectedJob, FilterReason
 
 
 def map_education_level(education_str: Optional[str]) -> str:
@@ -41,38 +38,6 @@ def map_education_level(education_str: Optional[str]) -> str:
         return "학력무관"
     
     return ""
-
-
-def global_deadline_filter(jobs: List[Any], today: Optional[_date] = None) -> FilterResult:
-    """
-    전역 하드필터: 마감일 필터
-
-    - 발송일(today) 기준으로 `application_deadline_date`가 하루 이상 남은 공고만 포함
-    - `application_deadline_time`은 판단에 사용하지 않음 (날짜만 비교)
-    - 마감일이 없는 공고는 필터 적용 안함 (통과시킴)
-    - 파싱 실패 시 안전을 위해 통과
-    """
-    if today is None:
-        today = _date.today()
-
-    passed: List[Any] = []
-    rejected: List[RejectedJob] = []
-
-    for j in jobs:
-        adate = getattr(j, "application_deadline_date", None)
-        if not adate:
-            passed.append(j)
-            continue
-        try:
-            deadline_date = datetime.strptime(adate, "%Y-%m-%d").date()
-            if deadline_date > today:
-                passed.append(j)
-            else:
-                rejected.append(RejectedJob(job=j, reason=FilterReason.DEADLINE))
-        except (ValueError, TypeError):
-            passed.append(j)
-
-    return FilterResult(passed=passed, rejected=rejected)
 
 
 def build_deadline(deadline_date: Optional[str], deadline_time: Optional[str]) -> Optional[datetime]:
@@ -126,19 +91,20 @@ def safe_enum(enum_cls, value, fallback):
         return fallback
 
 
-def build_requests_for_user(user, feed_type, method, top_n):
+def build_requests_for_user(user):
     """
     Create a RecommendRequest from a UserPreferences object.
-    
+
     Reads user.sort which is already normalized by normalize_user().
-    
-    feed_type and method are fixed (not read from user).
+
+    method is fixed (not read from user).
+    feed_type is not included — the engine always runs personalized then explore.
     """
     from job_finder_rec.recommender.types import RecommendRequest, SortOption
 
     sort = safe_enum(SortOption, user.sort, SortOption.RECOMMENDATION)
 
-    req = RecommendRequest(feed_type=feed_type, method=method, sort=sort, top_n=top_n)
+    req = RecommendRequest(sort=sort)
     return req
 
 
