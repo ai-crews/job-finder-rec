@@ -1,11 +1,9 @@
 from typing import List, Optional
 
 from job_finder_rec.recommender.types import (
-    RecommendRequest, PersonalizedMethod, JobPosting, RecommendationItem,
-    UserPreferences,
+    RecommendRequest, FilterResult, JobPosting, RecommendationItem,
+    UserPreferences, SortOption,
 )
-from job_finder_rec.recommender.filter import apply_hard_filter
-
 
 
 def _get_job_priority_rank(job: JobPosting, user: UserPreferences) -> Optional[int]:
@@ -16,7 +14,6 @@ def _get_job_priority_rank(job: JobPosting, user: UserPreferences) -> Optional[i
 
     Returns:
         int: 1, 2, 3 중 하나
-        None: 매칭 없음 (직무 무관 공고 혹은 사용자 직무 미설정)
     """
     if not user.target_jobs or not job.processed_position_name:
         return None
@@ -30,15 +27,38 @@ def _get_job_priority_rank(job: JobPosting, user: UserPreferences) -> Optional[i
     return None
 
 
-def recommend_personalized(user: UserPreferences, jobs: List[JobPosting], req: "RecommendRequest") -> List[RecommendationItem]:
-    """
-    맞춤형 추천
-    """
-    
-    filter_result = apply_hard_filter(user, jobs)
+def _sort_personalized(items: List[RecommendationItem], sort: SortOption) -> List[RecommendationItem]:
+    """정렬 옵션에 따라 맞춤형 추천 결과 정렬
 
+    DEADLINE: 마감일 오름차순 (마감일 없는 공고는 맨 뒤)
+    RECOMMENDATION: 직무 우선순위 → 마감일 tie-break
+        1차: job_priority_rank 오름차순 (1→2→3, None은 맨 뒤 → 4로 처리)
+        2차: 마감일 오름차순
+    """
+    if sort == SortOption.DEADLINE:
+        return sorted(
+            items,
+            key=lambda x: (x.job.deadline is None, x.job.deadline),
+        )
+    else:  # SortOption.RECOMMENDATION
+        return sorted(
+            items,
+            key=lambda x: (
+                x.job_priority_rank if x.job_priority_rank is not None else 4,
+                x.job.deadline is None,
+                x.job.deadline,
+            ),
+        )
+
+
+def recommend_personalized(user: UserPreferences, filter_result: FilterResult, req: "RecommendRequest") -> List[RecommendationItem]:
+    """
+    맞춤형 추천 — engine에서 이미 실행된 FilterResult를 받아 사용
+
+    filter_result.passed: 하드 필터(마감일·직무·학력) + 소프트 조건 모두 통과한 공고
+    """
     items: List[RecommendationItem] = []
     for j in filter_result.passed:
         rank = _get_job_priority_rank(j, user)
         items.append(RecommendationItem(job=j, score=0.0, job_priority_rank=rank))
-    return items
+    return _sort_personalized(items, req.sort)
