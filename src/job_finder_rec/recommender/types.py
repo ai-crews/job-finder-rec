@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, FrozenSet, List, Optional
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class UserPreferences:
     has_english_score: Optional[str] = None  # "예", "아니오"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class JobPosting:
     '''
     전처리된 고정 스키마를 속성으로 접근하기 위함
@@ -180,20 +180,38 @@ class RejectedJob:
 
 @dataclass(frozen=True)
 class FilterResult:
-    """필터링 결과 추적
-    
-    - passed: 필터를 통과한 공고 목록
-    - rejected: 탈락한 공고 + 탈락 사유
-    - counts: 사유별 탈락 카운트 (디버깅/로깅용)
+    """감사(audit) 기반 필터링 결과
+
+    - audit: 각 공고 → 탈락 사유 집합 (빈 집합 = 전체 통과)
+    - passed: 탈락 사유가 없는 공고 목록 (하드 필터 통과) [property]
+    - rejected: 탈락한 (공고, 사유) 쌍 목록 [property]
+    - counts: 사유별 탈락 카운트 (디버깅/로깅용) [property]
     """
-    passed: List[JobPosting]
-    rejected: List[RejectedJob] = field(default_factory=list)
-    
+    audit: Dict["JobPosting", FrozenSet["FilterReason"]]
+
+    @property
+    def passed(self) -> List["JobPosting"]:
+        """탈락 사유가 하나도 없는 공고 (하드 필터 전체 통과)"""
+        return [j for j, reasons in self.audit.items() if not reasons]
+
+    @property
+    def rejected(self) -> List["RejectedJob"]:
+        """탈락한 공고 + 사유 목록 (모든 사유 포함, 공고 중복 가능)"""
+        result = []
+        for job, reasons in self.audit.items():
+            for reason in reasons:
+                result.append(RejectedJob(job=job, reason=reason))
+        return result
+
     @property
     def counts(self) -> Dict[str, int]:
         """사유별 탈락 카운트"""
         from collections import Counter
-        return dict(Counter(r.reason.value for r in self.rejected))
+        c: Counter = Counter()
+        for reasons in self.audit.values():
+            for r in reasons:
+                c[r.value] += 1
+        return dict(c)
 
 
 @dataclass(frozen=True)
