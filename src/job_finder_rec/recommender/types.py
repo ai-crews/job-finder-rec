@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from datetime import datetime
 from typing import Any, Dict, FrozenSet, List, Optional
@@ -7,17 +7,15 @@ from typing import Any, Dict, FrozenSet, List, Optional
 @dataclass(frozen=True)
 class UserPreferences:
     email: str
-    target_jobs: List[str]                 # ["데이터 분석", "ML 엔지니어", ...]
-    target_employment_types: List[str]     # ["정규직", "인턴", ...]
-    sort: str                              # "deadline", "recommend" (폼 값 그대로)
-    raw: Dict[str, Any]                    # 원본 record 보관(디버깅/추적용)
-    name: Optional[str] = None
-    gender: Optional[str] = None
-    birth_year: Optional[int] = None
-    current_education: List[str] = field(default_factory=list)  # ["학사 졸업(예정)", "석사 졸업(예정)", ...]
-    preferred_company_sizes: List[str] = field(default_factory=list)
-    interested_industries: List[str] = field(default_factory=list)
-    has_english_score: Optional[str] = None  # "예", "아니오"
+    name: str
+    education_level: List[str]       # ["학사 졸업(예정)", "석사 졸업(예정)", ...]
+    employment_type: List[str]       # ["정규직", "인턴", ...]
+    top3_position: List[str]         # ["데이터 분석", "ML 엔지니어", ...]
+    company_size: List[str]
+    company_industry: List[str]
+    has_language_score: Optional[str]  # "예", "아니오"
+    sort: str                        # "deadline", "recommend" (폼 값 그대로)
+    raw: Dict[str, Any]              # 원본 record 보관(디버깅/추적용)
 
 
 @dataclass(frozen=True, eq=False)

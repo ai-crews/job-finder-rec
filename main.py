@@ -64,7 +64,7 @@ def main() -> None:
         personalized_recs, explore_recs = recommend(u, jobs, req)
 
         print("\n==============================")
-        print(f"👤USER {i+1} : {u.email} | sort={req.sort.value} | target_job={u.target_jobs}")
+        print(f"👤USER {i+1} : {u.email} | sort={req.sort.value} | target_job={u.top3_position}")
         print(f"[personalized] {len(personalized_recs)}개 | [explore] {len(explore_recs)}개")
 
         def _build_rec_list(recs, start_rank=1):
@@ -100,12 +100,12 @@ def main() -> None:
             "sort_method": req.sort.value,
             # 유저 필터 조건
             "filter_criteria": {
-                "target_jobs": u.target_jobs,
-                "target_employment_types": u.target_employment_types,
-                "current_education": u.current_education,
-                "preferred_company_sizes": u.preferred_company_sizes,
-                "interested_industries": u.interested_industries,
-                "has_english_score": u.has_english_score,
+                "target_jobs": u.top3_position,
+                "target_employment_types": u.employment_type,
+                "current_education": u.education_level,
+                "preferred_company_sizes": u.company_size,
+                "interested_industries": u.company_industry,
+                "has_english_score": u.has_language_score,
             },
             "personalized_total": len(p_recs),
             "personalized_recommendations": p_recs,

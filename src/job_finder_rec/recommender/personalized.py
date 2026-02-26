@@ -15,10 +15,10 @@ def _get_job_priority_rank(job: JobPosting, user: UserPreferences) -> Optional[i
     Returns:
         int: 1, 2, 3 중 하나
     """
-    if not user.target_jobs or not job.processed_position_name:
+    if not user.top3_position or not job.processed_position_name:
         return None
 
-    for rank, target_job in enumerate(user.target_jobs[:3], start=1):
+    for rank, target_job in enumerate(user.top3_position[:3], start=1):
         if not target_job:
             continue
         if target_job in job.processed_position_name:
