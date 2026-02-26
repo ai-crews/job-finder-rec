@@ -210,3 +210,5 @@ data/prod
 .vscode
 output
 analysis.ipynb
+
+credentials.json

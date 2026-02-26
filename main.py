@@ -5,6 +5,9 @@ import sys
 import json
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 
 def _ensure_src_on_path() -> None:
     """

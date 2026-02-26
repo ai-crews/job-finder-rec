@@ -122,29 +122,8 @@ def load_sheet_records() -> Optional[List[Dict[str, Any]]]:
         return None
 
     try:
-        from job_finder_rec.data.forms import sheets_reader  # type: ignore
-    except Exception as e:
-        print(f"⚠️ sheets_reader import 실패 → 더미 유저로 대체합니다. ({e})")
-        return None
-
-    fn = "load_recipients_from_sheet"
-
-    try:
-        result = getattr(sheets_reader, fn)(spreadsheet_id, worksheet_name)
-        # 케이스 1) records만 반환
-        if isinstance(result, list):
-            return result
-
-        # 케이스 2) (records, sh, ws) 또는 (email_list, records, sh, ws)
-        if isinstance(result, tuple):
-            # tuple에서 list[dict]로 보이는 걸 찾아 반환
-            for item in result:
-                if isinstance(item, list) and (len(item) == 0 or isinstance(item[0], dict)):
-                    return item
-
-        print("⚠️ 시트 로더 반환값을 해석하지 못해 더미 유저로 대체합니다.")
-        return None
-
+        from job_finder_rec.data.forms.sheets_reader import load_user_records_from_sheet
+        return load_user_records_from_sheet(spreadsheet_id, worksheet_name)
     except Exception as e:
         print(f"⚠️ 구글시트 로드 실패 → 더미 유저로 대체합니다. ({e})")
         return None
