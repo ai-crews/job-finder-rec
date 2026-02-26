@@ -53,6 +53,58 @@ def _split_csv(s: str) -> List[str]:
     return [x.strip() for x in s.split(",") if x and x.strip()]
 
 
+def _normalize_industry(raw: str) -> str:
+    """
+    구글 폼 산업 라벨에서 괄호 이하 예시 텍스트를 제거해 공고 industry 값과 맞춤.
+
+    예:
+    - "IT (네이버, 카카오, 삼성SDS 등)"  → "IT"
+    - "바이오 및 의료 (삼성바이오 등)"   → "바이오 및 의료"
+    - "게임"                             → "게임"  (괄호 없으면 그대로)
+    """
+    return raw.split("(")[0].strip()
+
+
+def _split_industries(s: str) -> List[str]:
+    """
+    산업 필드는 콤마 구분 CSV로 오지만, 라벨 자체 괄호 안에 콤마가 포함되어 있어
+    단순 split(",")이 잘못 쪼갤 수 있음.
+    괄호 depth를 추적해 depth=0인 콤마에서만 분리 후 정규화.
+
+    예:
+    - "IT (네이버, 카카오 등), 금융 (KB, 비바리퍼블리카(토스) 등)"
+      → ["IT", "금융"]
+    """
+    if not s:
+        return []
+
+    parts: List[str] = []
+    depth = 0
+    current: List[str] = []
+
+    for char in s:
+        if char == "(":
+            depth += 1
+            current.append(char)
+        elif char == ")":
+            depth -= 1
+            current.append(char)
+        elif char == "," and depth == 0:
+            part = "".join(current).strip()
+            if part:
+                parts.append(_normalize_industry(part))
+            current = []
+        else:
+            current.append(char)
+
+    # 마지막 항목
+    part = "".join(current).strip()
+    if part:
+        parts.append(_normalize_industry(part))
+
+    return parts
+
+
 def _normalize_sort_value(raw: str) -> str:
     if not raw:
         return ""
