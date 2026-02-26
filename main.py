@@ -25,7 +25,6 @@ from job_finder_rec.data.jobs.job_loader import load_all_job_data
 from job_finder_rec.data.jobs.job_adapter import adapt_jobs
 
 from job_finder_rec.recommender.engine import recommend
-from job_finder_rec.recommender.types import PersonalizedMethod
 
 from job_finder_rec.data.forms.user_adapter import normalize_users
 from job_finder_rec.recommender.utils import build_requests_for_user, load_sheet_records, dummy_user_records
@@ -85,7 +84,6 @@ def main() -> None:
                     "company_size": j.company_size,
                     "industry": j.industry,
                     "deadline": j.application_deadline_date,
-                    "score": item.score,
                 })
             return result
 

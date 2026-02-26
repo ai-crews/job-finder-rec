@@ -11,7 +11,6 @@ class UserPreferences:
     target_employment_types: List[str]     # ["정규직", "인턴", ...]
     sort: str                              # "deadline", "recommend" (폼 값 그대로)
     raw: Dict[str, Any]                    # 원본 record 보관(디버깅/추적용)
-    # optional demographic / profile fields from the form
     name: Optional[str] = None
     gender: Optional[str] = None
     birth_year: Optional[int] = None
@@ -26,42 +25,21 @@ class JobPosting:
     '''
     전처리된 고정 스키마를 속성으로 접근하기 위함
     '''
-    # group_name: str
     company_name: str
     job_title: str
-    # position_name: str
     processed_position_name: List[str]              # ["ML엔지니어", "AI개발자"]
 
-    # min_experience_level: str
-    # max_experience_level: str
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
     
     processed_language_score_required: str
 
-    # min_education_level: str
-    # max_education_level: str
     processed_education_level_list: List[str]
 
     industry: Optional[str] = None
     company_size: Optional[str] = None
-    # application_start_date: Optional[str] = None
     application_deadline_date: Optional[str] = None
     application_deadline_time: Optional[str] = None
-
-    # team_introduction: Optional[str]
-    # job_duties: Optional[str]
-    # qualifications: Optional[str]
-    # preferred_qualifications: Optional[str]
-
-    # work_location: Optional[str]
-    # work_department: Optional[str]
-    # recruitment_process: Optional[str]
-    # other_details: Optional[str]
-
-    # application_link: Optional[str]
-    # image_filename: Optional[str]
-    # crawling_datetime: Optional[str]
 
     # 파생 필드: 마감기한 datetime
     deadline: Optional[datetime] = None
@@ -98,7 +76,6 @@ class JobPosting:
         industry = src.get("industry")
         company_size = src.get("company_size")
 
-        # application_start_date = src.get("application_start_date")
         application_deadline_date = src.get("application_deadline_date")
         application_deadline_time = src.get("application_deadline_time")
 
@@ -131,7 +108,6 @@ class JobPosting:
             processed_education_level_list=processed_education_level_list,
             industry=industry,
             company_size=company_size,
-            # application_start_date=application_start_date,
             application_deadline_date=application_deadline_date,
             application_deadline_time=application_deadline_time,
             deadline=deadline,
@@ -142,23 +118,12 @@ class JobPosting:
 @dataclass(frozen=True)
 class RecommendationItem:
     job: JobPosting
-    score: float = 0.0
     job_priority_rank: Optional[int] = None  # 직무 우선순위 버킷 (1/2/3, None=미매칭)
-
-
-class FeedType(str, Enum):
-    PERSONALIZED = "personalized"
-    EXPLORE = "explore"
 
 
 class SortOption(str, Enum):
     DEADLINE = "deadline"
     RECOMMENDATION = "recommend"
-
-
-class PersonalizedMethod(str, Enum):
-    FILTER = "filter"
-    EMBEDDING = "embedding"
 
 
 class FilterReason(str, Enum):
