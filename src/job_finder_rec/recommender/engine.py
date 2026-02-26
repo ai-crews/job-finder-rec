@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from job_finder_rec.recommender.types import JobPosting, RecommendationItem, UserPreferences, RecommendRequest, FeedType, SortOption, PersonalizedMethod
+from job_finder_rec.recommender.types import JobPosting, RecommendationItem, UserPreferences, RecommendRequest
 from job_finder_rec.recommender.filter import apply_filters, apply_filters
 from job_finder_rec.recommender.personalized import recommend_personalized
 from job_finder_rec.recommender.explore import recommend_explore

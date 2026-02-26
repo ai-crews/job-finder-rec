@@ -60,5 +60,5 @@ def recommend_personalized(user: UserPreferences, filter_result: FilterResult, r
     items: List[RecommendationItem] = []
     for j in filter_result.passed:
         rank = _get_job_priority_rank(j, user)
-        items.append(RecommendationItem(job=j, score=0.0, job_priority_rank=rank))
+        items.append(RecommendationItem(job=j, job_priority_rank=rank))
     return _sort_personalized(items, req.sort)

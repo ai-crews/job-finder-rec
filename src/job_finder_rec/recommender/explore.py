@@ -1,6 +1,6 @@
 from typing import Dict, FrozenSet, List, Tuple
 
-from job_finder_rec.recommender.types import FilterReason, FilterResult, JobPosting, RecommendationItem, UserPreferences, RecommendRequest
+from job_finder_rec.recommender.types import FilterReason, FilterResult, JobPosting, RecommendationItem
 
 _SOFT_REASONS: FrozenSet[FilterReason] = frozenset({
     FilterReason.EMPLOYMENT,
@@ -37,5 +37,5 @@ def recommend_explore(filter_result: FilterResult) -> List[RecommendationItem]:
     """
     items: List[RecommendationItem] = []
     for j in _sort_explore(filter_result.audit)[:5]:
-        items.append(RecommendationItem(job=j, score=0.0))
+        items.append(RecommendationItem(job=j))
     return items
