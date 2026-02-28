@@ -25,7 +25,7 @@ _ensure_src_on_path()
 
 # ===== imports (after sys.path) =====
 from job_finder_rec.data.jobs.job_loader import load_all_job_data
-from job_finder_rec.data.jobs.job_adapter import adapt_jobs
+from job_finder_rec.data.jobs.job_adapter import normalize_jobs
 
 from job_finder_rec.recommender.engine import recommend
 
@@ -42,7 +42,7 @@ def main() -> None:
         print(f"❌ 공고 데이터가 없습니다. JOBS_DATA_FOLDER={jobs_folder}")
         return
 
-    jobs = adapt_jobs(raw_jobs)
+    jobs = normalize_jobs(raw_jobs)
     print(f"✅ 공고 로드 완료: {len(jobs)}개 (from {jobs_folder})")
 
     # ===== 2) 유저 로드 (시트 → 실패시 더미) =====
