@@ -49,12 +49,12 @@ def _position_filter(
     - 사용자가 직무를 선택하지 않은 경우 → 전부 통과
     - 공고의 직무와 사용자 직무 Top3의 교집합이 없으면 → 제거
     """
-    if not user.target_jobs:
+    if not user.top3_position:
         return jobs
 
     return [
         j for j in jobs
-        if any(pos in user.target_jobs for pos in j.processed_position_name)
+        if any(pos in user.top3_position for pos in j.processed_position_name)
     ]
 
 
@@ -69,11 +69,11 @@ def _education_filter(
     - 공고와 사용자 학력 교집합이 있으면 → 통과
     - 그 외 → 제거
     """
-    if not user.current_education or not isinstance(user.current_education, list):
+    if not user.education_level or not isinstance(user.education_level, list):
         return jobs
 
     user_education_keywords: Set[str] = set()
-    for edu_str in user.current_education:
+    for edu_str in user.education_level:
         keyword = map_education_level(edu_str)
         if keyword:
             user_education_keywords.add(keyword)
@@ -116,14 +116,14 @@ def _employment_type_audit(
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
     """고용형태 감사: 사용자 고용형태와 불일치하는 공고 → FilterReason.EMPLOYMENT"""
-    if not user.target_employment_types:
+    if not user.employment_type:
         return {}
 
     failed: Dict[Any, FilterReason] = {}
     for j in jobs:
         if not j.processed_employment_type:
             continue
-        if not any(emp in user.target_employment_types for emp in j.processed_employment_type):
+        if not any(emp in user.employment_type for emp in j.processed_employment_type):
             failed[j] = FilterReason.EMPLOYMENT
     return failed
 
@@ -133,12 +133,12 @@ def _company_size_audit(
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
     """기업규모 감사: 기업규모 불일치 공고 → FilterReason.COMPANY_SIZE"""
-    if not user.preferred_company_sizes:
+    if not user.company_size:
         return {}
 
     failed: Dict[Any, FilterReason] = {}
     for j in jobs:
-        if j.company_size and j.company_size not in user.preferred_company_sizes:
+        if j.company_size and j.company_size not in user.company_size:
             failed[j] = FilterReason.COMPANY_SIZE
     return failed
 
@@ -148,12 +148,12 @@ def _industry_audit(
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
     """산업 감사: 산업 불일치 공고 → FilterReason.INDUSTRY"""
-    if not user.interested_industries:
+    if not user.company_industry:
         return {}
 
     failed: Dict[Any, FilterReason] = {}
     for j in jobs:
-        if j.industry and j.industry not in user.interested_industries:
+        if j.industry and j.industry not in user.company_industry:
             failed[j] = FilterReason.INDUSTRY
     return failed
 

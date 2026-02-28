@@ -1,6 +1,23 @@
 from datetime import datetime
 
-from sheets_auth import authenticate_sheets_oauth
+from job_finder_rec.data.forms.sheets_auth import authenticate_sheets_oauth
+
+
+def load_user_records_from_sheet(spreadsheet_id: str, worksheet_name: str):
+    """
+    Google Sheets에서 유저 설문 records를 로드해 List[Dict]로 반환
+    실패 시 None 반환
+    """
+    try:
+        gc = authenticate_sheets_oauth()
+        sh = gc.open_by_key(spreadsheet_id)
+        ws = sh.worksheet(worksheet_name)
+        records = ws.get_all_records()
+        print(f"✅ 구글시트 유저 로드 완료: {len(records)}명 (from '{worksheet_name}')")
+        return records if records else None
+    except Exception as e:
+        print(f"❌ Google Sheets 유저 로드 실패: {e}")
+        return None
 
 
 def load_recipients_from_sheet(spreadsheet_id, worksheet_name):
