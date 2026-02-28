@@ -83,7 +83,7 @@ def _education_filter(
 
     result = []
     for j in jobs:
-        job_education_list = j.processed_education_level_list or []
+        job_education_list = j.processed_education_level or []
         if isinstance(job_education_list, str):
             job_education_list = [job_education_list]
 

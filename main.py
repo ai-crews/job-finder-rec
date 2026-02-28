@@ -73,9 +73,15 @@ def main() -> None:
                 j = item.job
                 priority_label = f"P{item.job_priority_rank}" if item.job_priority_rank else "P-"
                 print(f"{rank:02d}. [{priority_label}] [{j.company_name}] {j.job_title} | {j.processed_position_name}")
-                if j.application_deadline_date:
-                    t = j.application_deadline_time or ""
-                    print(f"    - deadline: {j.application_deadline_date} {t}".strip())
+                if j.deadline_date:
+                    d = j.deadline_date.strftime("%Y-%m-%d")
+                    t = j.deadline_time.strftime("%H:%M") if j.deadline_time else ""
+                    print(f"    - deadline: {d} {t}".strip())
+                deadline_str = None
+                if j.deadline_date:
+                    d = j.deadline_date.strftime("%Y-%m-%d")
+                    t = j.deadline_time.strftime("%H:%M") if j.deadline_time else ""
+                    deadline_str = f"{d} {t}".strip()
                 result.append({
                     "rank": rank,
                     "job_priority_rank": item.job_priority_rank,
@@ -83,10 +89,10 @@ def main() -> None:
                     "job_title": j.job_title,
                     "position_name": j.processed_position_name,
                     "employment_type": j.processed_employment_type,
-                    "education_level": j.processed_education_level_list,
+                    "education_level": j.processed_education_level,
                     "company_size": j.company_size,
                     "industry": j.industry,
-                    "deadline": j.application_deadline_date,
+                    "deadline": deadline_str,
                 })
             return result
 
