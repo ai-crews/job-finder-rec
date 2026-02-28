@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, Dict, FrozenSet, List, Optional
 
 
@@ -20,29 +20,23 @@ class UserPreferences:
 
 @dataclass(frozen=True, eq=False)
 class JobPosting:
-    '''
-    전처리된 고정 스키마를 속성으로 접근하기 위함
-    '''
-    company_name: str
+    # ── 필수 필드 ──────────────────────────────────────────────
     job_title: str
+    company_name: str
+    industry: str
+    company_size: str
     processed_position_name: List[str]              # ["ML엔지니어", "AI개발자"]
-
+    processed_education_level: List[str]
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
-    
-    processed_language_score_required: str
+    processed_language_required: bool
 
-    processed_education_level_list: List[str]
+    # ── 선택 필드 (파싱 실패 시 None) ─────────────────────────
+    deadline_date: Optional[datetime] = None        # 마감일 (date 부분)
+    deadline_time: Optional[time] = None            # 마감시각 (time 부분만)
+    deadline: Optional[datetime] = None             # 파생: date+time 합산
 
-    industry: Optional[str] = None
-    company_size: Optional[str] = None
-    application_deadline_date: Optional[str] = None
-    application_deadline_time: Optional[str] = None
-
-    # 파생 필드: 마감기한 datetime
-    deadline: Optional[datetime] = None
-
-    # 디버깅/추적용 원본
+    # ── 디버깅/추적용 원본 ────────────────────────────────────
     raw: Optional[Dict[str, Any]] = None
 
     @classmethod
