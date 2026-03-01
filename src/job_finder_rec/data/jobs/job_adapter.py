@@ -24,11 +24,23 @@ def _parse_str(record: Dict[str, Any], key: str) -> str:
 
 
 def _parse_list(record: Dict[str, Any], key: str) -> List[str]:
+    import ast
     v = record.get(key)
     if isinstance(v, list):
         return [str(x).strip() for x in v if x]
-    if isinstance(v, str) and v.strip():
-        return [v.strip()]
+    if isinstance(v, str):
+        s = v.strip()
+        if not s:
+            return []
+        # 시트에서 "['ML엔지니어', 'AI개발자']" 형태로 오는 경우 파싱
+        if s.startswith("["):
+            try:
+                parsed = ast.literal_eval(s)
+                if isinstance(parsed, list):
+                    return [str(x).strip() for x in parsed if x]
+            except Exception:
+                pass
+        return [s]
     return []
 
 
