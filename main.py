@@ -24,29 +24,27 @@ _ensure_src_on_path()
 
 
 # ===== imports (after sys.path) =====
-from job_finder_rec.data.jobs.job_loader import load_all_job_data
 from job_finder_rec.data.jobs.job_adapter import normalize_jobs
-
+from job_finder_rec.data.jobs.sheets_reader import load_job_records_from_sheet
+from job_finder_rec.data.forms.sheets_reader import load_user_records_from_sheet
 from job_finder_rec.recommender.engine import recommend
-
 from job_finder_rec.data.forms.user_adapter import normalize_users
-from job_finder_rec.recommender.utils import build_requests_for_user, load_sheet_records, dummy_user_records
-# 구글시트 로더는 프로젝트에 따라 함수명이 다를 수 있어서 런타임에서 탐색
+from job_finder_rec.recommender.utils import build_requests_for_user, dummy_user_records
+
 
 
 def main() -> None:
-    # ===== 1) 공고 로드 =====
-    jobs_folder = os.getenv("JOBS_DATA_FOLDER", "data/prod")
-    raw_jobs = load_all_job_data(jobs_folder)
+    # ===== 1) 공고 로드 (구글 시트) =====
+    raw_jobs = load_job_records_from_sheet()
     if not raw_jobs:
-        print(f"❌ 공고 데이터가 없습니다. JOBS_DATA_FOLDER={jobs_folder}")
+        print("❌ 공고 데이터가 없습니다. JOB_SPREADSHEET_ID / JOB_WORKSHEET_NAME 환경변수를 확인하세요.")
         return
 
     jobs = normalize_jobs(raw_jobs)
-    print(f"✅ 공고 로드 완료: {len(jobs)}개 (from {jobs_folder})")
+    print(f"✅ 공고 정규화 완료: {len(jobs)}개")
 
     # ===== 2) 유저 로드 (시트 → 실패시 더미) =====
-    records = load_sheet_records()
+    records = load_user_records_from_sheet()
     if records is None:
         records = dummy_user_records()
         print(f"✅ 더미 유저 records 사용: {len(records)}명")
