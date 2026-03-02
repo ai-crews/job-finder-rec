@@ -21,6 +21,7 @@ class UserPreferences:
 @dataclass(frozen=True, eq=False)
 class JobPosting:
     # ── 필수 필드 ──────────────────────────────────────────────
+    post_id: str
     job_title: str
     company_name: str
     industry: str
@@ -30,6 +31,7 @@ class JobPosting:
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
     processed_language_required: bool
+    json_file_name: str
 
     # ── 선택 필드 (파싱 실패 시 None) ─────────────────────────
     deadline_date: Optional[datetime] = None        # 마감일 (date 부분)

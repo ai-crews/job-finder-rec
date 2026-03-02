@@ -42,8 +42,8 @@ def map_education_level(education_str: Optional[str]) -> str:
 
 def build_deadline(deadline_date: Optional[str], deadline_time: Optional[str]) -> Optional[datetime]:
     """
-    application_deadline_date: "YYYY-MM-DD"
-    application_deadline_time: "HH:MM:SS" (없으면 23:59:59로 처리)
+    deadline_date: "YYYY-MM-DD"
+    deadline_time: "HH:MM:SS" (없으면 23:59:59로 처리)
     """
     if not deadline_date:
         return None
