@@ -108,6 +108,23 @@ def _education_filter(
     return result
 
 
+def _language_score_filter(
+    user: UserPreferences,
+    jobs: List[Any],
+) -> List[Any]:
+    """어학점수 하드 필터: 어학점수가 필요한 공고를 어학점수 없는 사용자에게서 제거
+
+    - 사용자가 어학점수를 보유한 경우 (has_language_score == "예") → 전부 통과
+    - 사용자 정보가 없는 경우 → 전부 통과
+    - 공고에 어학점수가 불필요한 경우 → 통과
+    - 공고에 어학점수가 필요하고 사용자가 미보유인 경우 → 제거
+    """
+    if not user.has_language_score or user.has_language_score == "예":
+        return jobs
+
+    return [j for j in jobs if not j.processed_language_required]
+
+
 # ---------------------------------------------------------------------------
 # 소프트 감사 필터 (고용형태·기업규모·산업) — 이유 누적, 제거 없음
 # ---------------------------------------------------------------------------
@@ -183,7 +200,7 @@ def apply_filters(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult
     """필터 전체 적용
 
     1단계 — 하드 필터 (실제 제거, 이유 기록 없음):
-        마감일 → 직무 → 학력
+        마감일 → 직무 → 학력 → 어학점수
 
     2단계 — 소프트 감사 (제거 없이 이유 누적):
         고용형태 / 기업규모 / 산업
@@ -198,6 +215,7 @@ def apply_filters(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult
     candidates = _deadline_filter(jobs)
     candidates = _position_filter(user, candidates)
     candidates = _education_filter(user, candidates)
+    candidates = _language_score_filter(user, candidates)
 
     # 2단계: 소프트 감사 — 이유 누적
     audit = _build_audit(
