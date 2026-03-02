@@ -1,5 +1,4 @@
-from datetime import datetime
-from datetime import date as _date
+from datetime import timedelta, date as _date
 from typing import Any, Dict, FrozenSet, List, Optional, Set
 
 from job_finder_rec.recommender.types import (
@@ -18,12 +17,14 @@ def _deadline_filter(
     today: Optional[_date] = None,
 ) -> List[Any]:
     """마감일 하드 필터:
-    - 발송일(today) 기준으로 deadline_date가 하루 이상 남은 공고만 포함
+    - 추천일(today) 기준으로 deadline_date가 1일 이상 30일 이하 남은 공고만 포함
     - 마감일이 없는 공고는 통과
     - 파싱 실패 시 안전하게 통과
     """
     if today is None:
         today = _date.today()
+
+    max_date = today + timedelta(days=30)
 
     result = []
     for j in jobs:
@@ -33,7 +34,7 @@ def _deadline_filter(
             continue
         try:
             d = deadline_date.date() if hasattr(deadline_date, "date") else deadline_date
-            if d > today:
+            if today < d <= max_date:
                 result.append(j)
         except (ValueError, TypeError):
             result.append(j)
