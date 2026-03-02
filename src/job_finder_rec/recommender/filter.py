@@ -9,7 +9,7 @@ from job_finder_rec.recommender.utils import map_education_level
 
 
 # ---------------------------------------------------------------------------
-# 하드 필터 (마감일·직무·학력) — 실제 제거, 이유 기록 없음
+# 하드 필터 (마감일·직무·학력·어학점수·경력) — 실제 제거, 이유 기록 없음
 # ---------------------------------------------------------------------------
 
 def _deadline_filter(
@@ -125,6 +125,17 @@ def _language_score_filter(
     return [j for j in jobs if not j.processed_language_required]
 
 
+def _experience_level_filter(
+    jobs: List[Any],
+) -> List[Any]:
+    """경력 하드 필터: 경력직만 모집하는 공고를 후보에서 제거
+
+    - processed_experience_level 값이 '경력'인 공고 → 제거
+    - 값이 없거나 '신입', '경력무관' 등 → 통과
+    """
+    return [j for j in jobs if j.processed_experience_level != "경력"]
+
+
 # ---------------------------------------------------------------------------
 # 소프트 감사 필터 (고용형태·기업규모·산업) — 이유 누적, 제거 없음
 # ---------------------------------------------------------------------------
@@ -200,7 +211,7 @@ def apply_filters(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult
     """필터 전체 적용
 
     1단계 — 하드 필터 (실제 제거, 이유 기록 없음):
-        마감일 → 직무 → 학력 → 어학점수
+        마감일 → 직무 → 학력 → 어학점수 → 경력
 
     2단계 — 소프트 감사 (제거 없이 이유 누적):
         고용형태 / 기업규모 / 산업
@@ -216,6 +227,7 @@ def apply_filters(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult
     candidates = _position_filter(user, candidates)
     candidates = _education_filter(user, candidates)
     candidates = _language_score_filter(user, candidates)
+    candidates = _experience_level_filter(candidates)
 
     # 2단계: 소프트 감사 — 이유 누적
     audit = _build_audit(
