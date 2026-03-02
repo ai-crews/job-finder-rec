@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any, Dict, FrozenSet, List, Optional
 
 
@@ -20,97 +20,24 @@ class UserPreferences:
 
 @dataclass(frozen=True, eq=False)
 class JobPosting:
-    '''
-    전처리된 고정 스키마를 속성으로 접근하기 위함
-    '''
-    company_name: str
+    # ── 필수 필드 ──────────────────────────────────────────────
     job_title: str
+    company_name: str
+    industry: str
+    company_size: str
     processed_position_name: List[str]              # ["ML엔지니어", "AI개발자"]
-
+    processed_education_level: List[str]
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
-    
-    processed_language_score_required: str
+    processed_language_required: bool
 
-    processed_education_level_list: List[str]
+    # ── 선택 필드 (파싱 실패 시 None) ─────────────────────────
+    deadline_date: Optional[datetime] = None        # 마감일 (date 부분)
+    deadline_time: Optional[time] = None            # 마감시각 (time 부분만)
+    deadline: Optional[datetime] = None             # 파생: date+time 합산
 
-    industry: Optional[str] = None
-    company_size: Optional[str] = None
-    application_deadline_date: Optional[str] = None
-    application_deadline_time: Optional[str] = None
-
-    # 파생 필드: 마감기한 datetime
-    deadline: Optional[datetime] = None
-
-    # 디버깅/추적용 원본
+    # ── 디버깅/추적용 원본 ────────────────────────────────────
     raw: Optional[Dict[str, Any]] = None
-
-    @classmethod
-    def from_dict(cls, src: Dict[str, Any]) -> "JobPosting":
-        """Create a JobPosting from a raw dict.
-
-        - Parses `application_deadline_date` and optional `application_deadline_time` into `deadline`.
-        - Returns an instance with `raw` set to the original dict.
-        """
-        company_name = src.get("company_name") or ""
-        job_title = src.get("job_title") or ""
-
-        processed_position_name = src.get("processed_position_name") or []
-        if isinstance(processed_position_name, str):
-            processed_position_name = [processed_position_name] if processed_position_name else []
-
-        processed_experience_level = src.get("processed_experience_level") or ""
-
-        processed_employment_type = src.get("processed_employment_type") or []
-        if isinstance(processed_employment_type, str):
-            processed_employment_type = [processed_employment_type] if processed_employment_type else []
-
-        processed_language_score_required = src.get("processed_language_score_required") or ""
-
-        processed_education_level_list = src.get("processed_education_level_list") or []
-        if isinstance(processed_education_level_list, str):
-            processed_education_level_list = [processed_education_level_list] if processed_education_level_list else []
-
-        industry = src.get("industry")
-        company_size = src.get("company_size")
-
-        application_deadline_date = src.get("application_deadline_date")
-        application_deadline_time = src.get("application_deadline_time")
-
-        # parse deadline into datetime when possible
-        deadline: Optional[datetime] = None
-        if application_deadline_date:
-            try:
-                if application_deadline_time:
-                    dt_str = f"{application_deadline_date} {application_deadline_time}"
-                    try:
-                        deadline = datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
-                    except ValueError:
-                        # try without seconds
-                        try:
-                            deadline = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
-                        except ValueError:
-                            deadline = None
-                else:
-                    deadline = datetime.strptime(application_deadline_date, "%Y-%m-%d")
-            except Exception:
-                deadline = None
-
-        return cls(
-            company_name=company_name,
-            job_title=job_title,
-            processed_position_name=processed_position_name,
-            processed_experience_level=processed_experience_level,
-            processed_employment_type=processed_employment_type,
-            processed_language_score_required=processed_language_score_required,
-            processed_education_level_list=processed_education_level_list,
-            industry=industry,
-            company_size=company_size,
-            application_deadline_date=application_deadline_date,
-            application_deadline_time=application_deadline_time,
-            deadline=deadline,
-            raw=src,
-        )
 
 
 @dataclass(frozen=True)

@@ -1,13 +1,21 @@
+import os
 from datetime import datetime
 
-from job_finder_rec.data.forms.sheets_auth import authenticate_sheets_oauth
+from job_finder_rec.data.sheets_auth import authenticate_sheets_oauth
 
 
-def load_user_records_from_sheet(spreadsheet_id: str, worksheet_name: str):
+def load_user_records_from_sheet(spreadsheet_id: str = None, worksheet_name: str = None):
     """
-    Google Sheets에서 유저 설문 records를 로드해 List[Dict]로 반환
-    실패 시 None 반환
+    Google Sheets에서 유저 설문 records를 로드해 List[Dict]로 반환.
+    - spreadsheet_id / worksheet_name 미전달 시 환경변수 USER_SPREADSHEET_ID / USER_WORKSHEET_NAME 사용
+    - 환경변수도 없거나 실패 시 None 반환
     """
+    spreadsheet_id = spreadsheet_id or os.getenv("USER_SPREADSHEET_ID", "").strip()
+    worksheet_name = worksheet_name or os.getenv("USER_WORKSHEET_NAME", "").strip()
+
+    if not spreadsheet_id or not worksheet_name:
+        return None
+
     try:
         gc = authenticate_sheets_oauth()
         sh = gc.open_by_key(spreadsheet_id)

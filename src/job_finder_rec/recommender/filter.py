@@ -18,7 +18,7 @@ def _deadline_filter(
     today: Optional[_date] = None,
 ) -> List[Any]:
     """마감일 하드 필터:
-    - 발송일(today) 기준으로 'application_deadline_date'가 하루 이상 남은 공고만 포함
+    - 발송일(today) 기준으로 deadline_date가 하루 이상 남은 공고만 포함
     - 마감일이 없는 공고는 통과
     - 파싱 실패 시 안전하게 통과
     """
@@ -27,13 +27,13 @@ def _deadline_filter(
 
     result = []
     for j in jobs:
-        adate = getattr(j, "application_deadline_date", None)
-        if not adate:
+        deadline_date = getattr(j, "deadline_date", None)
+        if not deadline_date:
             result.append(j)
             continue
         try:
-            deadline_date = datetime.strptime(adate, "%Y-%m-%d").date()
-            if deadline_date > today:
+            d = deadline_date.date() if hasattr(deadline_date, "date") else deadline_date
+            if d > today:
                 result.append(j)
         except (ValueError, TypeError):
             result.append(j)
@@ -83,7 +83,7 @@ def _education_filter(
 
     result = []
     for j in jobs:
-        job_education_list = j.processed_education_level_list or []
+        job_education_list = j.processed_education_level or []
         if isinstance(job_education_list, str):
             job_education_list = [job_education_list]
 

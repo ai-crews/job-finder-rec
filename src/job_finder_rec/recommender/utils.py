@@ -109,26 +109,6 @@ def build_requests_for_user(user):
 
 
 
-def load_sheet_records() -> Optional[List[Dict[str, Any]]]:
-    """
-    구글시트에서 records를 로드 시도
-    - SPREADSHEET_ID, WORKSHEET_NAME이 있을 때만 시도
-    - sheets_reader.py의 함수명/리턴 형태가 달라도 최대한 흡수
-    """
-    spreadsheet_id = os.getenv("SPREADSHEET_ID", "").strip()
-    worksheet_name = os.getenv("WORKSHEET_NAME", "").strip()
-
-    if not spreadsheet_id or not worksheet_name:
-        return None
-
-    try:
-        from job_finder_rec.data.forms.sheets_reader import load_user_records_from_sheet
-        return load_user_records_from_sheet(spreadsheet_id, worksheet_name)
-    except Exception as e:
-        print(f"⚠️ 구글시트 로드 실패 → 더미 유저로 대체합니다. ({e})")
-        return None
-
-
 def dummy_user_records() -> List[Dict[str, Any]]:
     """
     유저 데이터가 없을 때도 파이프라인이 돌아가도록 더미 records 생성
