@@ -25,7 +25,7 @@ _ensure_src_on_path()
 
 # ===== imports (after sys.path) =====
 from job_finder_rec.data.jobs.job_adapter import normalize_jobs
-from job_finder_rec.data.jobs.sheets_reader import load_job_records_from_sheet
+from job_finder_rec.data.jobs.sheets_reader import load_job_records_from_sheet, write_job_records_to_sheet
 from job_finder_rec.data.forms.sheets_reader import load_user_records_from_sheet
 from job_finder_rec.recommender.engine import recommend
 from job_finder_rec.data.forms.user_adapter import normalize_users
@@ -40,8 +40,21 @@ def main() -> None:
         print("❌ 공고 데이터가 없습니다. JOB_SPREADSHEET_ID / JOB_WORKSHEET_NAME 환경변수를 확인하세요.")
         return
 
-    jobs = normalize_jobs(raw_jobs)
-    print(f"✅ 공고 정규화 완료: {len(jobs)}개")
+    # 수시채용(마감일 9999-12-31) 분리 → 별도 시트로 기록 후 추천 대상에서 제외
+    _ROLLING_DATE_STR = "9999-12-31"
+    raw_rolling = [r for r in raw_jobs if str(r.get("deadline_date", "")).strip() == _ROLLING_DATE_STR]
+    raw_regular = [r for r in raw_jobs if str(r.get("deadline_date", "")).strip() != _ROLLING_DATE_STR]
+    print(f"ℹ️  수시채용 분리: rolling={len(raw_rolling)}개, regular={len(raw_regular)}개")
+    if raw_rolling and raw_jobs:
+        sample_keys = list(raw_jobs[0].keys())
+        print(f"ℹ️  raw_jobs 샘플 키: {sample_keys[:8]}")
+
+    if raw_rolling:
+        print(f"ℹ️  수시채용 공고 {len(raw_rolling)}개 분리 → 별도 시트 기록 중...")
+        write_job_records_to_sheet(raw_rolling)
+
+    jobs = normalize_jobs(raw_regular)
+    print(f"✅ 공고 정규화 완료: {len(jobs)}개 (수시채용 {len(raw_rolling)}개 제외)")
 
     # ===== 2) 유저 로드 (시트 → 실패시 더미) =====
     records = load_user_records_from_sheet()
