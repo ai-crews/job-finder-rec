@@ -1,6 +1,5 @@
-import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 
 def map_education_level(education_str: Optional[str]) -> str:
@@ -40,41 +39,12 @@ def map_education_level(education_str: Optional[str]) -> str:
     return ""
 
 
-def build_deadline(deadline_date: Optional[str], deadline_time: Optional[str]) -> Optional[datetime]:
-    """
-    deadline_date: "YYYY-MM-DD"
-    deadline_time: "HH:MM:SS" (없으면 23:59:59로 처리)
-    """
-    if not deadline_date:
-        return None
-
-    d = deadline_date.strip()
-    t = (deadline_time or "").strip()
-
-    # time이 없거나 비정상이면 기본값
-    if not t:
-        t = "23:59:59"
-
-    # date만 들어오는 경우도 방어
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
-        try:
-            return datetime.strptime(f"{d} {t}", fmt)
-        except Exception:
-            pass
-
-    # 마지막 fallback: 날짜만 파싱
-    try:
-        return datetime.strptime(d, "%Y-%m-%d")
-    except Exception:
-        return None
-
-
 def safe_enum(enum_cls, value, fallback):
     """
-    Safely convert a value to an enum member.
-    - If value is already an enum member, return it.
-    - If value is a string, match by value or name (case-insensitive).
-    - Otherwise, return fallback.
+    값을 안전하게 enum 멤버로 변환
+    - value가 이미 enum 멤버이면 그대로 반환
+    - value가 문자열이면 value 또는 name으로 대소문자 구분 없이 매칭
+    - 그 외의 경우 fallback을 반환
     """
     try:
         if value is None:
@@ -93,12 +63,12 @@ def safe_enum(enum_cls, value, fallback):
 
 def build_requests_for_user(user):
     """
-    Create a RecommendRequest from a UserPreferences object.
+    UserPreferences 객체로부터 RecommendRequest를 생성
 
-    Reads user.sort which is already normalized by normalize_user().
+    normalize_user()를 통해 이미 정규화된 user.sort를 읽음
 
-    method is fixed (not read from user).
-    feed_type is not included — the engine always runs personalized then explore.
+    method는 고정값이며 user에서 읽지 않음
+    feed_type은 포함하지 않는다 — 엔진은 항상 personalized 후 explore 순서로 실행
     """
     from job_finder_rec.recommender.types import RecommendRequest, SortOption
 
@@ -107,76 +77,3 @@ def build_requests_for_user(user):
     req = RecommendRequest(sort=sort)
     return req
 
-
-
-def dummy_user_records() -> List[Dict[str, Any]]:
-    """
-    유저 데이터가 없을 때도 파이프라인이 돌아가도록 더미 records 생성
-    - user_adapter.normalize_user가 읽는 키들만 최소한으로 맞춰줌
-    """
-    # 우선 환경변수로 폴더를 지정할 수 있게 하고, 기본은 data/prod/users
-    users_folder = os.getenv("USERS_DATA_FOLDER", os.path.join(os.getcwd(), "data", "prod", "users"))
-
-    def _load_from_file(path: str) -> Optional[List[Dict[str, Any]]]:
-        try:
-            if path.lower().endswith(('.xls', '.xlsx')):
-                try:
-                    import pandas as pd
-
-                    try:
-                        df = pd.read_excel(path, dtype=str)
-                    except Exception:
-                        # explicit fallback to openpyxl engine if default engine fails
-                        try:
-                            df = pd.read_excel(path, dtype=str, engine="openpyxl")
-                        except Exception as e:
-                            print(f"⚠️ pandas.read_excel 실패: {e}")
-                            return None
-
-                    df = df.fillna("")
-                    return df.to_dict(orient="records")
-                except Exception as e:
-                    print(f"⚠️ pandas import 또는 엑셀 파싱 실패: {e}")
-                    return None
-
-        except Exception:
-            return None
-
-    # 찾기: users_folder 내부의 첫 번째 적합한 파일을 사용
-    try:
-        if os.path.isdir(users_folder):
-            for fname in os.listdir(users_folder):
-                fpath = os.path.join(users_folder, fname)
-                if os.path.isfile(fpath) and fname.lower().endswith((".json", ".csv", ".xls", ".xlsx")):
-                    records = _load_from_file(fpath)
-                    if records:
-                        print(f"✅ 유저 샘플 로드: {fpath} -> {len(records)} records")
-                        return records
-    except Exception:
-        pass
-
-    # fallback: 기본 더미
-    return [
-        {
-            "이메일 주소": "demo1@example.com",
-            "희망 직무 1순위 (필수응답)": "Data Scientist",
-            "희망 직무 2순위 ": "데이터 분석",
-            "희망 직무 3순위 ": "",
-            "희망 고용 형태 (복수선택)": "정규직",
-            "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
-            "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "학사",
-            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "deadline",
-            "영어 어학 성적을 보유하고 계신가요?": "예",
-        },
-        {
-            "이메일 주소": "demo2@example.com",
-            "희망 직무 1순위 (필수응답)": "Data Scientist",
-            "희망 직무 2순위 ": "",
-            "희망 직무 3순위 ": "",
-            "희망 고용 형태 (복수선택)": "",
-            "찾고 계신 공고의 경력 조건을 선택해주세요.": "신입",
-            "찾고 계신 공고의 학력 조건을 선택해주세요. (졸업예정자도 선택 가능, 복수선택)": "",
-            "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해드릴까요?": "recommend",
-            "영어 어학 성적을 보유하고 계신가요?": "아니오",
-        },
-    ]

@@ -16,7 +16,9 @@ def _deadline_filter(
     jobs: List[Any],
     today: Optional[_date] = None,
 ) -> List[Any]:
-    """마감일 하드 필터:
+    """
+    마감일 하드 필터
+
     - 추천일(today) 기준으로 deadline_date가 1일 이상 30일 이하 남은 공고만 포함
     - 마감일이 없는 공고는 통과
     - 파싱 실패 시 안전하게 통과
@@ -45,8 +47,10 @@ def _position_filter(
     user: UserPreferences,
     jobs: List[Any],
 ) -> List[Any]:
-    """직무 하드 필터: 직무 불일치 공고를 후보에서 제거
-
+    """
+    직무 하드 필터
+    
+    - 직무 불일치 공고를 후보에서 제거
     - 사용자가 직무를 선택하지 않은 경우 → 전부 통과
     - 공고의 직무와 사용자 직무 Top3의 교집합이 없으면 → 제거
     """
@@ -63,8 +67,10 @@ def _education_filter(
     user: UserPreferences,
     jobs: List[Any],
 ) -> List[Any]:
-    """학력 하드 필터: 학력 요건 불일치 공고를 후보에서 제거
-
+    """
+    학력 하드 필터
+    
+    - 학력 요건 불일치 공고를 후보에서 제거
     - 사용자가 학력을 선택하지 않은 경우 → 전부 통과
     - 공고에 "학력무관"이 있으면 → 통과
     - 공고와 사용자 학력 교집합이 있으면 → 통과
@@ -112,8 +118,10 @@ def _language_score_filter(
     user: UserPreferences,
     jobs: List[Any],
 ) -> List[Any]:
-    """어학점수 하드 필터: 어학점수가 필요한 공고를 어학점수 없는 사용자에게서 제거
-
+    """
+    어학점수 하드 필터
+    
+    - 어학점수가 필요한 공고를 어학점수 없는 사용자에게서 제거
     - 사용자가 어학점수를 보유한 경우 (has_language_score == "예") → 전부 통과
     - 사용자 정보가 없는 경우 → 전부 통과
     - 공고에 어학점수가 불필요한 경우 → 통과
@@ -128,8 +136,10 @@ def _language_score_filter(
 def _experience_level_filter(
     jobs: List[Any],
 ) -> List[Any]:
-    """경력 하드 필터: 경력직만 모집하는 공고를 후보에서 제거
-
+    """
+    경력 하드 필터
+    
+    - 경력직만 모집하는 공고를 후보에서 제거
     - processed_experience_level 값이 '경력'인 공고 → 제거
     - 값이 없거나 '신입', '경력무관' 등 → 통과
     """
@@ -144,7 +154,11 @@ def _employment_type_audit(
     user: UserPreferences,
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
-    """고용형태 감사: 사용자 고용형태와 불일치하는 공고 → FilterReason.EMPLOYMENT"""
+    """
+    고용형태 감사
+    
+    - 사용자 고용형태와 불일치하는 공고 → FilterReason.EMPLOYMENT
+    """
     if not user.employment_type:
         return {}
 
@@ -161,7 +175,11 @@ def _company_size_audit(
     user: UserPreferences,
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
-    """기업규모 감사: 기업규모 불일치 공고 → FilterReason.COMPANY_SIZE"""
+    """
+    기업규모 감사
+    
+    - 기업규모 불일치 공고 → FilterReason.COMPANY_SIZE
+    """
     if not user.company_size:
         return {}
 
@@ -176,7 +194,11 @@ def _industry_audit(
     user: UserPreferences,
     jobs: List[Any],
 ) -> Dict[Any, FilterReason]:
-    """산업 감사: 산업 불일치 공고 → FilterReason.INDUSTRY"""
+    """
+    산업 감사
+    
+    - 산업 불일치 공고 → FilterReason.INDUSTRY
+    """
     if not user.company_industry:
         return {}
 
@@ -195,7 +217,9 @@ def _build_audit(
     jobs: List[Any],
     *partial_audits: Dict[Any, FilterReason],
 ) -> Dict[Any, FrozenSet[FilterReason]]:
+    
     """여러 소프트 감사 결과를 공고별 이유 집합으로 통합"""
+
     combined: Dict[Any, Set[FilterReason]] = {j: set() for j in jobs}
     for partial in partial_audits:
         for job, reason in partial.items():
@@ -208,7 +232,8 @@ def _build_audit(
 # ---------------------------------------------------------------------------
 
 def apply_filters(user: UserPreferences, jobs: List[JobPosting]) -> FilterResult:
-    """필터 전체 적용
+    """
+    필터 전체 적용
 
     1단계 — 하드 필터 (실제 제거, 이유 기록 없음):
         마감일 → 직무 → 학력 → 어학점수 → 경력

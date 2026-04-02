@@ -28,7 +28,8 @@ def _get_job_priority_rank(job: JobPosting, user: UserPreferences) -> Optional[i
 
 
 def _sort_personalized(items: List[RecommendationItem], sort: SortOption) -> List[RecommendationItem]:
-    """정렬 옵션에 따라 맞춤형 추천 결과 정렬
+    """
+    정렬 옵션에 따라 맞춤형 추천 결과 정렬
 
     DEADLINE: 마감일 오름차순 (마감일 없는 공고는 맨 뒤)
     RECOMMENDATION: 직무 우선순위 → 마감일 tie-break

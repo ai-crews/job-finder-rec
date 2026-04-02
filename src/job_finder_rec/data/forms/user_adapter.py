@@ -2,20 +2,23 @@ from typing import Any, Dict, List, Optional
 from job_finder_rec.recommender.types import UserPreferences
 import re
 
-EMAIL_KEYS = "이메일 주소"
 
-Q_NAME = "메일에 표시될 닉네임을 입력해주세요.\n입력하신 닉네임은 메일에서 이렇게 사용돼요.\n예: 📬 홍길동님, 3월 1주차 채용공고가 도착했어요!"
-Q_EDUCATION_LEVEL = "찾고 계신 학력 정보를 선택해주세요. "
-Q_EMPLOYMENT_TYPE = "찾고 계신 고용 형태를 선택해주세요. (복수 선택 가능) "
-Q_JOB_1 = "1순위 희망 직무를 선택해주세요."
-Q_JOB_2 = "2순위 희망 직무를 선택해주세요.  (없으면 선택하지 않으셔도 됩니다.) "
-Q_JOB_3 = "3순위 희망 직무를 선택해주세요.  (없으면 선택하지 않으셔도 됩니다.) "
-Q_COMPANY_SIZE = "선호하시는 기업 규모를 선택해주세요. (복수 선택 가능)"
-Q_COMPANY_INDUSTRY = "관심 있는 산업군을 선택해주세요. (복수 선택 가능)\n\n찾으시는 산업군이 없다면, '기타'에 직접 입력해 주세요.\n(예: 건설, 제조, 로봇, 반도체 등)"
-Q_HAS_LANGUAGE_SCORE = "영어 성적이 필수인 공고도 함께 보내드릴까요? \n\n영어 성적을 보유하고 계실 경우, ‘예’를 선택해주세요.\n없다면 해당 공고는 제외해 보내드려요."
-Q_SORT = "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해 드릴까요?"
+# ── 시트 컬럼명 상수 ──────────────────────────────────────────
+EMAIL_KEYS            = "이메일 주소"
+
+Q_NAME                = "메일에 표시될 닉네임을 입력해주세요.\n입력하신 닉네임은 메일에서 이렇게 사용돼요.\n예: 📬 홍길동님, 3월 1주차 채용공고가 도착했어요!"
+Q_EDUCATION_LEVEL     = "찾고 계신 학력 정보를 선택해주세요. "
+Q_EMPLOYMENT_TYPE     = "찾고 계신 고용 형태를 선택해주세요. (복수 선택 가능) "
+Q_JOB_1               = "1순위 희망 직무를 선택해주세요."
+Q_JOB_2               = "2순위 희망 직무를 선택해주세요.  (없으면 선택하지 않으셔도 됩니다.) "
+Q_JOB_3               = "3순위 희망 직무를 선택해주세요.  (없으면 선택하지 않으셔도 됩니다.) "
+Q_COMPANY_SIZE        = "선호하시는 기업 규모를 선택해주세요. (복수 선택 가능)"
+Q_COMPANY_INDUSTRY    = "관심 있는 산업군을 선택해주세요. (복수 선택 가능)\n\n찾으시는 산업군이 없다면, '기타'에 직접 입력해 주세요.\n(예: 건설, 제조, 로봇, 반도체 등)"
+Q_HAS_LANGUAGE_SCORE  = "영어 성적이 필수인 공고도 함께 보내드릴까요? \n\n영어 성적을 보유하고 계실 경우, ‘예’를 선택해주세요.\n없다면 해당 공고는 제외해 보내드려요."
+Q_SORT                = "메일 서비스에서 채용 공고를 어떤 기준으로 정렬해 드릴까요?"
 
 
+# ── 파싱 헬퍼 ─────────────────────────────────────────────────
 def _normalize_key(k: str) -> str:
     if k is None:
         return ""
@@ -55,7 +58,7 @@ def _split_csv(s: str) -> List[str]:
 
 def _normalize_industry(raw: str) -> str:
     """
-    구글 폼 산업 라벨에서 괄호 이하 예시 텍스트를 제거해 공고 industry 값과 맞춤.
+    구글 폼 산업 라벨에서 괄호 이하 예시 텍스트를 제거해 공고 industry 값과 맞춤
 
     예:
     - "IT (네이버, 카카오, 삼성SDS 등)"  → "IT"
@@ -68,12 +71,11 @@ def _normalize_industry(raw: str) -> str:
 def _split_industries(s: str) -> List[str]:
     """
     산업 필드는 콤마 구분 CSV로 오지만, 라벨 자체 괄호 안에 콤마가 포함되어 있어
-    단순 split(",")이 잘못 쪼갤 수 있음.
-    괄호 depth를 추적해 depth=0인 콤마에서만 분리 후 정규화.
+    단순 split(",")이 잘못 쪼갤 수 있음
+    괄호 depth를 추적해 depth=0인 콤마에서만 분리 후 정규화
 
     예:
-    - "IT (네이버, 카카오 등), 금융 (KB, 비바리퍼블리카(토스) 등)"
-      → ["IT", "금융"]
+    - "IT (네이버, 카카오 등), 금융 (KB, 비바리퍼블리카(토스) 등)"  → ["IT", "금융"]
     """
     if not s:
         return []
@@ -109,10 +111,9 @@ def _normalize_sort_value(raw: str) -> str:
     if not raw:
         return ""
     s = raw.strip().lower()
-    # Accept known English keywords
+
     if s in ("deadline", "recommend"):
         return s
-    # Map common Korean phrases to internal values
     if "마감" in s:
         return "deadline"
     if "추천" in s:
@@ -127,6 +128,7 @@ def _get_email(record: Dict[str, Any]) -> Optional[str]:
     return None
 
 
+# ── 퍼블릭 API ────────────────────────────────────────────────
 def normalize_user(record: Dict[str, Any]) -> UserPreferences:
     email = _get_email(record)
     
@@ -135,8 +137,10 @@ def normalize_user(record: Dict[str, Any]) -> UserPreferences:
         (_get_by_key_variants(record, Q_JOB_2) or "").strip(),
         (_get_by_key_variants(record, Q_JOB_3) or "").strip(),
     ]
-    target_jobs = [j for j in target_jobs if j]
-
+    # 빈 값 제거 + 1순위 > 2순위 > 3순위 순서를 유지하면서 중복 제거
+    seen: set = set()
+    target_jobs = [j for j in target_jobs if j and not (j in seen or seen.add(j))]
+    
     prefs = UserPreferences(
         email=email,
         name=(_get_by_key_variants(record, Q_NAME) or "").strip(),

@@ -23,6 +23,8 @@ class JobPosting:
     # ── 필수 필드 ──────────────────────────────────────────────
     post_id: str
     job_title: str
+    job_url: str
+
     company_name: str
     industry: str
     company_size: str
@@ -31,7 +33,6 @@ class JobPosting:
     processed_experience_level: str
     processed_employment_type: List[str]            # ["정규직"]
     processed_language_required: bool
-    json_file_name: str
 
     # ── 선택 필드 (파싱 실패 시 None) ─────────────────────────
     deadline_date: Optional[datetime] = None        # 마감일 (date 부분)
@@ -72,7 +73,8 @@ class RejectedJob:
 
 @dataclass(frozen=True)
 class FilterResult:
-    """감사(audit) 기반 필터링 결과
+    """
+    감사(audit) 기반 필터링 결과
 
     - audit: 각 공고 → 탈락 사유 집합 (빈 집합 = 전체 통과)
     - passed: 탈락 사유가 없는 공고 목록 (하드 필터 통과) [property]

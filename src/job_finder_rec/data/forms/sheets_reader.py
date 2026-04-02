@@ -6,7 +6,7 @@ from job_finder_rec.data.sheets_auth import authenticate_sheets_oauth
 
 def load_user_records_from_sheet(spreadsheet_id: str = None, worksheet_name: str = None):
     """
-    Google Sheets에서 유저 설문 records를 로드해 List[Dict]로 반환.
+    Google Sheets에서 유저 설문 records를 로드해 List[Dict]로 반환
     - spreadsheet_id / worksheet_name 미전달 시 환경변수 USER_SPREADSHEET_ID / USER_WORKSHEET_NAME 사용
     - 환경변수도 없거나 실패 시 None 반환
     """
@@ -80,68 +80,3 @@ def load_recipients_from_sheet(spreadsheet_id, worksheet_name):
         print(f"❌ Google Sheets 로드 실패: {e}")
         return [], None, None
 
-
-def write_status_to_sheet(ws, records, results):
-    """시트에 발송 결과 기록"""
-    try:
-        if not ws or not records or not results:
-            print("⚠️ 결과 기록을 위한 데이터가 부족합니다.")
-            return
-
-        print("📝 시트에 발송 결과 기록 중...")
-
-        # 현재 헤더 가져오기
-        headers = ws.row_values(1)
-        status_col = len(headers) + 1
-        time_col = len(headers) + 2
-
-        # 헤더에 상태 컬럼 추가 (없으면)
-        if "발송상태" not in headers:
-            ws.update_cell(1, status_col, "발송상태")
-            ws.update_cell(1, time_col, "발송시간")
-            print("✅ 헤더에 상태 컬럼 추가됨")
-        else:
-            # 기존 상태 컬럼 위치 찾기
-            status_col = headers.index("발송상태") + 1
-            if "발송시간" in headers:
-                time_col = headers.index("발송시간") + 1
-
-        # 각 행에 결과 기록
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        updated_count = 0
-
-        # 이메일 컬럼 찾기
-        email_columns = ["이메일 주소", "email", "Email", "EMAIL", "이메일"]
-        email_col_name = None
-
-        for col in email_columns:
-            if col in records[0]:
-                email_col_name = col
-                break
-
-        if not email_col_name:
-            print("❌ 이메일 컬럼을 찾을 수 없어 결과 기록을 건너뜁니다.")
-            return
-
-        for i, record in enumerate(records, 2):
-            email = record.get(email_col_name, "").strip()
-            if email in results:
-                status, error = results[email]
-
-                # 상태 업데이트
-                ws.update_cell(i, status_col, status)
-
-                # 시간 및 오류 메시지 업데이트
-                if status == "SUCCESS":
-                    ws.update_cell(i, time_col, current_time)
-                else:
-                    error_msg = f"{current_time} - 실패: {error[:50]}"  # 50자 제한
-                    ws.update_cell(i, time_col, error_msg)
-
-                updated_count += 1
-                print(f"  행 {i}: {email} → {status}")
-
-        print(f"✅ {updated_count}개 행의 발송 결과가 기록되었습니다")
-
-    except Exception as e:
-        print(f"❌ 시트 결과 기록 실패: {e}")

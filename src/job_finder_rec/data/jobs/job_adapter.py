@@ -6,17 +6,17 @@ from job_finder_rec.recommender.types import JobPosting
 # ── 시트 컬럼명 상수 ──────────────────────────────────────────
 COL_POST_ID                = "post_id"
 COL_JOB_TITLE              = "job_title"
+COL_JOB_URL                = "job_url"
 COL_COMPANY_NAME           = "company_name"
-COL_INDUSTRY               = "industry"
 COL_COMPANY_SIZE           = "company_size"
+COL_INDUSTRY               = "company_industry"
 COL_DEADLINE_DATE          = "deadline_date"
 COL_DEADLINE_TIME          = "deadline_time"
 COL_POSITION_NAME          = "processed_position_name"
-COL_EDUCATION_LEVEL        = "processed_education_level_list"
+COL_EDUCATION_LEVEL        = "processed_education_level"
 COL_EXPERIENCE_LEVEL       = "processed_experience_level"
 COL_EMPLOYMENT_TYPE        = "processed_employment_type"
 COL_LANGUAGE_REQUIRED      = "processed_language_score_required"
-COL_JSON_FILE_NAME         = "json_file_name"
 
 
 # ── 파싱 헬퍼 ─────────────────────────────────────────────────
@@ -103,6 +103,7 @@ def normalize_job(record: Dict[str, Any]) -> JobPosting:
     return JobPosting(
         post_id=_parse_str(record, COL_POST_ID),
         job_title=_parse_str(record, COL_JOB_TITLE),
+        job_url=_parse_str(record, COL_JOB_URL),
         company_name=_parse_str(record, COL_COMPANY_NAME),
         industry=_parse_str(record, COL_INDUSTRY),
         company_size=_parse_str(record, COL_COMPANY_SIZE),
@@ -111,7 +112,6 @@ def normalize_job(record: Dict[str, Any]) -> JobPosting:
         processed_experience_level=_parse_str(record, COL_EXPERIENCE_LEVEL),
         processed_employment_type=_parse_list(record, COL_EMPLOYMENT_TYPE),
         processed_language_required=_parse_bool(record, COL_LANGUAGE_REQUIRED),
-        json_file_name=_parse_str(record, COL_JSON_FILE_NAME),
         deadline_date=deadline_date,
         deadline_time=deadline_time,
         deadline=deadline,

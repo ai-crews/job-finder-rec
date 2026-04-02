@@ -29,11 +29,10 @@ def _sort_explore(audit: Dict[JobPosting, FrozenSet[FilterReason]]) -> List[JobP
 
 def recommend_explore(filter_result: FilterResult) -> List[RecommendationItem]:
     """
-    탐색형 추천 — engine에서 이미 실행된 FilterResult를 받아 사용
+    탐색형 추천
 
-    - 하드 필터(마감일·직무·학력)는 이미 제거된 상태
-    - soft reason(고용형태·기업규모·산업) 불만족 개수 기준 오름차순 정렬
-      (불만족 1개 → 2개 → 3개 순)
+    - 하드 필터(마감일·직무·학력) 불만족 공고는 이미 제거된 상태
+    - soft reason(고용형태·기업규모·산업) 불만족 개수 기준 오름차순 정렬(불만족 1개 → 2개 → 3개 순)
     """
     items: List[RecommendationItem] = []
     for j in _sort_explore(filter_result.audit)[:5]:

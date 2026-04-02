@@ -6,7 +6,7 @@ from job_finder_rec.data.sheets_auth import authenticate_sheets_oauth
 
 def load_job_records_from_sheet(spreadsheet_id: str = None, worksheet_name: str = None):
     """
-    Google Sheets에서 공고 records를 로드해 List[Dict]로 반환.
+    Google Sheets에서 공고 records를 로드해 List[Dict]로 반환
     - spreadsheet_id / worksheet_name 미전달 시 환경변수 JOB_SPREADSHEET_ID / JOB_WORKSHEET_NAME 사용
     - 환경변수도 없거나 실패 시 None 반환
     """
@@ -36,7 +36,7 @@ def write_job_records_to_sheet(
     worksheet_name: str = None,
 ) -> bool:
     """
-    records(List[Dict])를 Google Sheets 워크시트에 누적 적재.
+    records(List[Dict])를 Google Sheets 워크시트에 누적 적재
     - job_title 기준으로 이미 시트에 존재하는 공고는 건너뜀
     - 신규 공고만 시트 하단에 append
     - 시트가 비어있으면 헤더 포함하여 초기 작성
