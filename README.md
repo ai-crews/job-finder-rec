@@ -130,7 +130,6 @@ JOB_WORKSHEET_NAME=
 ROLLING_RECRUITMENT_SPREADSHEET_ID=
 ROLLING_RECRUITMENT_WORKSHEET_NAME=
 ```
-LE_CREDENTIALS_PATH`에 경로를 지정합니다.
 
 ### 4. 시트 권한 공유
 Service Account 이메일을 사용자 / 공고 / 수시채용 시트에 공유해야 합니다.
